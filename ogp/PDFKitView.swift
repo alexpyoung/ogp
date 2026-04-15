@@ -9,25 +9,18 @@ import SwiftUI
 import PDFKit
 
 struct PDFKitView: UIViewRepresentable {
-    let request: URLRequest
+    
+    let data: Data
 
     func makeUIView(context: Context) -> PDFView {
-        let pdfView = PDFView()
-        pdfView.autoScales = true
-        pdfView.displayMode = .singlePageContinuous
-        pdfView.displayDirection = .vertical
-        
-        Task {
-            do {
-                let (data, _) = try await URLSession.shared.data(for: self.request)
-                if let document = PDFDocument(data: data) {
-                    pdfView.document = document
-                }
-            } catch {
-                print("Failed to load PDF:", error)
-            }
+        let view = PDFView()
+        view.autoScales = true
+        view.displayMode = .singlePageContinuous
+        view.displayDirection = .vertical
+        if let document = PDFDocument(data: self.data) {
+            view.document = document
         }
-        return pdfView
+        return view
     }
 
     func updateUIView(_ uiView: PDFView, context: Context) {}

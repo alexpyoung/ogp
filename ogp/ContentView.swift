@@ -5,16 +5,19 @@
 //  Created by Alex Young on 4/14/26.
 //
 
+import SwiftData
 import SwiftUI
 
 struct ContentView: View {
+    
+    @Environment(\.modelContext) private var context
     @StateObject private var model = ViewModel()
     @State private var isAuthenticating = true
     
     var body: some View {
         NavigationStack {
             switch model.state {
-            case .authenticating:
+            case .unauthenticated:
                 Button("Login") {
                     isAuthenticating = true
                 }
@@ -22,18 +25,23 @@ struct ContentView: View {
                 ProgressView()
                     .progressViewStyle(.circular)
                     .scaleEffect(1.5)
-//            case .render(let request):
-//                PDFKitView(request: request)
-            case .list(let items):
-                List(items, id: \.self) { item in
-                    NavigationLink(value: item) {
-                        Text(item.url?.lastPathComponent ?? "Error")
+            case .authenticated:
+                DocumentsListView()
+                .navigationTitle("Documents")
+                .navigationDestination(for: PDFModel.self) { pdf in
+                    if let data = try? self.model.store?.load(for: pdf.id) {
+                        PDFKitView(data: data)
+                    } else {
+                        Text("Error")
                     }
                 }
-                .navigationTitle("Documents")
-                .navigationDestination(for: URLRequest.self) { item in
-                    PDFKitView(request: item)
-                }
+            case .error(let error):
+                Text(error.localizedDescription)
+            }
+        }
+        .task {
+            if self.model.store == nil {
+                self.model.store = PDFStore(context: self.context)
             }
         }
         .sheet(isPresented: $isAuthenticating) {
