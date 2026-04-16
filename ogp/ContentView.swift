@@ -45,7 +45,7 @@ struct ContentView: View {
             }
         }
         .sheet(isPresented: $isAuthenticating) {
-            WebView(url: URL(string: "https://lmsdocs.fdnycloud.org")!) {
+            AuthenticationView(url: URL(string: "https://lmsdocs.fdnycloud.org")!) {
                 self.isAuthenticating = false
                 self.model.didAuthenticate(using: $0)
             }

@@ -8,7 +8,7 @@
 import SwiftUI
 import WebKit
 
-struct WebView: UIViewRepresentable {
+struct AuthenticationView: UIViewRepresentable {
     let url: URL
     let didAuthenticate: (WKWebView) -> Void
 
