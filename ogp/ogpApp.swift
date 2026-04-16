@@ -11,8 +11,16 @@ import SwiftUI
 struct ogpApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ApplicationView()
         }
         .modelContainer(for: PDFModel.self)
+    }
+}
+
+private struct ApplicationView: View {
+    
+    @Environment(\.modelContext) private var context
+    var body: some View {
+        ContentView(model: ViewModel(store: PDFStore(context: self.context)))
     }
 }

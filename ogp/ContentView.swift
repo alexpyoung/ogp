@@ -10,12 +10,11 @@ import SwiftUI
 
 struct ContentView: View {
     
-    @Environment(\.modelContext) private var context
-    @StateObject private var model = ViewModel()
+    @StateObject var model: ViewModel
     @State private var isAuthenticating = true
     
     var body: some View {
-        NavigationStack {
+        Group {
             switch model.state {
             case .unauthenticated:
                 Button("Login") {
@@ -26,22 +25,16 @@ struct ContentView: View {
                     .progressViewStyle(.circular)
                     .scaleEffect(1.5)
             case .authenticated:
-                DocumentsListView()
-                .navigationTitle("Documents")
-                .navigationDestination(for: PDFModel.self) { pdf in
-                    if let data = try? self.model.store?.load(for: pdf.id) {
-                        PDFKitView(data: data)
-                    } else {
-                        Text("Error")
+                TabView {
+                    Tab("Documents", systemImage: "tray.full") {
+                        DocumentsListView(model: self.model)
+                    }
+                    Tab("Settings", systemImage: "gear") {
+                        Text("Settings")
                     }
                 }
             case .error(let error):
                 Text(error.localizedDescription)
-            }
-        }
-        .task {
-            if self.model.store == nil {
-                self.model.store = PDFStore(context: self.context)
             }
         }
         .sheet(isPresented: $isAuthenticating) {

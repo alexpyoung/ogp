@@ -27,6 +27,10 @@ final class ViewModel: ObservableObject {
     func didAuthenticate(using view: WKWebView) {
         self.state = .authenticated
     }
+    
+    func data(for pdf: PDFModel) throws -> Data? {
+        return try self.store.load(for: pdf.id)
+    }
 
     private func crawl(using view: WKWebView) {
         self.state = .crawling
