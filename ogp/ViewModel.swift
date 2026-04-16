@@ -20,40 +20,44 @@ enum AppState {
 final class ViewModel: ObservableObject {
     
     @Published private(set) var state: AppState = .unauthenticated
-    private let crawler = WebCrawler()
+    private var crawler: WebCrawler?
     private var cookies: [HTTPCookie] = []
-    var store: PDFStore?
+    private let store: PDFStore
+    
+    init(store: PDFStore) {
+        self.store = store
+    }
     
     func didAuthenticate(using view: WKWebView) {
-        self.state = .authenticated
+        Task {
+            self.cookies = await view.cookies()
+            self.crawler = WebCrawler(view: view)
+            self.state = .authenticated
+        }
     }
     
     func data(for pdf: PDFModel) throws -> Data? {
         return try self.store.load(for: pdf.id)
     }
 
-    private func crawl(using view: WKWebView) {
+    private func crawl() {
         self.state = .crawling
-        if let start = URL(string: "https://lmsdocs.fdnycloud.org/dcu/web/ems-og-procedures") {
-            self.crawler.start(url: start, view: view) { results in
-                Task {
-                    do {
-                        self.cookies = await view.cookies()
-                        for result in results {
-                            guard let url = URL(string: result) else { continue }
-                            let request = URLRequest(url: url, cookies: self.cookies)
-                            let (data, _) = try await URLSession.shared.data(for: request)
-                            let _ = try self.store?.save(
-                                filename: url.lastPathComponent,
-                                data: data,
-                                remoteUrl: url
-                            )
-                        }
-                        self.state = .authenticated
-                    } catch {
-                        self.state = .error(error)
-                    }
+        let url = "https://lmsdocs.fdnycloud.org/dcu/web/ems-og-procedures"
+        self.crawler?.start(url: url) { results in
+            do {
+                for result in results {
+                    guard let url = URL(string: result) else { continue }
+                    let request = URLRequest(url: url, cookies: self.cookies)
+                    let (data, _) = try await URLSession.shared.data(for: request)
+                    let _ = try self.store.save(
+                        filename: url.lastPathComponent,
+                        data: data,
+                        remoteUrl: url
+                    )
                 }
+                self.state = .authenticated
+            } catch {
+                self.state = .error(error)
             }
         }
     }

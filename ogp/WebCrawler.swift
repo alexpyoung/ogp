@@ -9,6 +9,7 @@ import Foundation
 import WebKit
 
 final class WebCrawler: NSObject, ObservableObject {
+    weak var view: WKWebView?
     private var queue: Set<URL> = []
     private var visited: Set<String> = []
     private var pdfs: Set<String> = []
@@ -16,12 +17,15 @@ final class WebCrawler: NSObject, ObservableObject {
         "https://lmsdocs.fdnycloud.org/dcu/web/user/logout"
     ]
     fileprivate let baseHost = "lmsdocs.fdnycloud.org"
-    private weak var view: WKWebView?
-    private var onComplete: ((Set<String>) -> Void)? = nil
-
-    func start(url: URL, view: WKWebView, onComplete: @escaping (Set<String>) -> Void) {
+    private var onComplete: ((Set<String>) async -> Void)? = nil
+    
+    init(view: WKWebView) {
         self.view = view
-        view.navigationDelegate = self
+    }
+
+    func start(url: String, onComplete: @escaping (Set<String>) async -> Void) {
+        guard let url = URL(string: url) else { return }
+        self.view?.navigationDelegate = self
         self.queue.insert(url)
         self.onComplete = onComplete
         self.next()
@@ -29,7 +33,9 @@ final class WebCrawler: NSObject, ObservableObject {
     
     fileprivate func next() {
         guard !queue.isEmpty else {
-            self.onComplete?(pdfs)
+            Task {
+                await self.onComplete?(pdfs)
+            }
             return
         }
         let url = self.queue.removeFirst()
