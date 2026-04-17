@@ -9,13 +9,15 @@ import SwiftUI
 import WebKit
 
 struct AuthenticationView: UIViewRepresentable {
-    let url: URL
-    let didAuthenticate: (WKWebView) -> Void
+    
+    let didAuthenticate: ([HTTPCookie]) async -> Void
 
     func makeUIView(context: Context) -> WKWebView {
         let view = WKWebView(frame: .zero, configuration: .init())
         view.navigationDelegate = context.coordinator
-        view.load(URLRequest(url: url))
+        if let url = URL(string: "https://lmsdocs.fdnycloud.org") {
+            view.load(URLRequest(url: url))
+        }
         return view
     }
 
@@ -27,9 +29,9 @@ struct AuthenticationView: UIViewRepresentable {
 
     // MARK: - Coordinator
     final class Coordinator: NSObject, WKNavigationDelegate {
-        let didAuthenticate: (WKWebView) -> Void
+        let didAuthenticate: ([HTTPCookie]) async -> Void
 
-        init(didAuthenticate: @escaping (WKWebView) -> Void) {
+        init(didAuthenticate: @escaping ([HTTPCookie]) async -> Void) {
             self.didAuthenticate = didAuthenticate
         }
 
@@ -37,7 +39,10 @@ struct AuthenticationView: UIViewRepresentable {
             guard let url = view.url?.clean(),
                   url.absoluteString == "https://lmsdocs.fdnycloud.org/dcu/web/"
             else { return }
-            self.didAuthenticate(view)
+            Task {
+                let cookies = await view.cookies()
+                await self.didAuthenticate(cookies)
+            }
         }
     }
 }

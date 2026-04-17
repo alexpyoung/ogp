@@ -38,9 +38,9 @@ struct ContentView: View {
             }
         }
         .sheet(isPresented: $isAuthenticating) {
-            AuthenticationView(url: URL(string: "https://lmsdocs.fdnycloud.org")!) {
+            AuthenticationView() {
                 self.isAuthenticating = false
-                self.model.didAuthenticate(using: $0)
+                await self.model.didAuthenticate(using: $0)
             }
         }
     }

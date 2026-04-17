@@ -28,12 +28,10 @@ final class ViewModel: ObservableObject {
         self.store = store
     }
     
-    func didAuthenticate(using view: WKWebView) {
-        Task {
-            self.cookies = await view.cookies()
-            self.crawler = WebCrawler(view: view)
-            self.state = .authenticated
-        }
+    func didAuthenticate(using cookies: [HTTPCookie]) async {
+        self.cookies = cookies
+        self.crawler = await WebCrawler(cookies: cookies)
+        self.state = .authenticated
     }
     
     func data(for pdf: PDFModel) throws -> Data? {

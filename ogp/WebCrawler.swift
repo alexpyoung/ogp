@@ -9,7 +9,7 @@ import Foundation
 import WebKit
 
 final class WebCrawler: NSObject, ObservableObject {
-    weak var view: WKWebView?
+    private weak var view: WKWebView?
     private var queue: Set<URL> = []
     private var visited: Set<String> = []
     private var pdfs: Set<String> = []
@@ -19,18 +19,27 @@ final class WebCrawler: NSObject, ObservableObject {
     fileprivate let baseHost = "lmsdocs.fdnycloud.org"
     private var onComplete: ((Set<String>) async -> Void)? = nil
     
-    init(view: WKWebView) {
+    @MainActor
+    init(cookies: [HTTPCookie]) async {
+        let dataStore = WKWebsiteDataStore.default()
+        for cookie in cookies {
+            await dataStore.httpCookieStore.setCookie(cookie)
+        }
+        let config = WKWebViewConfiguration()
+        config.websiteDataStore = dataStore
+        let view = WKWebView(frame: .zero, configuration: config)
         self.view = view
+        super.init()
+        view.navigationDelegate = self
     }
 
     func start(url: String, onComplete: @escaping (Set<String>) async -> Void) {
         guard let url = URL(string: url) else { return }
-        self.view?.navigationDelegate = self
         self.queue.insert(url)
         self.onComplete = onComplete
         self.next()
     }
-    
+
     fileprivate func next() {
         guard !queue.isEmpty else {
             Task {
