@@ -9,12 +9,13 @@ import Foundation
 import SwiftData
 
 @Model
-class PDFModel {
-    var id: UUID
-    var remoteUrl: URL
-    var createdAt: Date
-    var updatedAt: Date
-    var filename: String
+final class PDFModel {
+    
+    private(set) var id: UUID
+    private(set) var remoteUrl: URL
+    private(set) var createdAt: Date
+    private(set) var updatedAt: Date
+    private(set) var filename: String
     
     init(url: URL, filename: String) {
         self.id = UUID()
