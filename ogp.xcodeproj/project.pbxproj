@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		FA331EBA2F953EB60050DD34 /* SwiftSoup in Frameworks */ = {isa = PBXBuildFile; productRef = FA331EB92F953EB60050DD34 /* SwiftSoup */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		FAC4B6EF2F887B97002E2245 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -52,6 +56,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FA331EBA2F953EB60050DD34 /* SwiftSoup in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,6 +117,7 @@
 			);
 			name = ogp;
 			packageProductDependencies = (
+				FA331EB92F953EB60050DD34 /* SwiftSoup */,
 			);
 			productName = ogp;
 			productReference = FAC4B6DD2F887B95002E2245 /* ogp.app */;
@@ -195,6 +201,9 @@
 			);
 			mainGroup = FAC4B6D42F887B95002E2245;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				FA331EB82F953EB60050DD34 /* XCRemoteSwiftPackageReference "SwiftSoup" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = FAC4B6DE2F887B95002E2245 /* Products */;
 			projectDirPath = "";
@@ -591,6 +600,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		FA331EB82F953EB60050DD34 /* XCRemoteSwiftPackageReference "SwiftSoup" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/scinfu/SwiftSoup";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.13.4;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		FA331EB92F953EB60050DD34 /* SwiftSoup */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FA331EB82F953EB60050DD34 /* XCRemoteSwiftPackageReference "SwiftSoup" */;
+			productName = SwiftSoup;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = FAC4B6D52F887B95002E2245 /* Project object */;
 }
