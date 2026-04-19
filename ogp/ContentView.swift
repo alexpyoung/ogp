@@ -11,10 +11,17 @@ import SwiftUI
 struct ContentView: View {
     
     @StateObject var model: ViewModel
-    @State private var isAuthenticating = true
+    @State private var isAuthenticating = false
     
     var body: some View {
         Group {
+            AuthenticationView() {
+                switch $0 {
+                case .authenticated: return
+                case .unauthenticated: self.isAuthenticating = true
+                }
+            }
+            .frame(width: .zero, height: .zero)
             switch model.state {
             case .unauthenticated:
                 Button("Login") {
@@ -39,8 +46,12 @@ struct ContentView: View {
         }
         .sheet(isPresented: $isAuthenticating) {
             AuthenticationView() {
-                self.isAuthenticating = false
-                await self.model.didAuthenticate(using: $0)
+                switch $0 {
+                case .unauthenticated: return
+                case .authenticated(let cookies):
+                    self.isAuthenticating = false
+                    await self.model.didAuthenticate(using: cookies)
+                }
             }
         }
     }

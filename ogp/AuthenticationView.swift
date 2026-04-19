@@ -10,7 +10,11 @@ import WebKit
 
 struct AuthenticationView: UIViewRepresentable {
     
-    let didAuthenticate: ([HTTPCookie]) async -> Void
+    enum Result {
+        case unauthenticated
+        case authenticated([HTTPCookie])
+    }
+    let onComplete: (Result) async -> Void
 
     func makeUIView(context: Context) -> WKWebView {
         let view = WKWebView(frame: .zero, configuration: .init())
@@ -24,24 +28,28 @@ struct AuthenticationView: UIViewRepresentable {
     func updateUIView(_ webView: WKWebView, context: Context) {}
 
     func makeCoordinator() -> Coordinator {
-        return Coordinator(didAuthenticate: didAuthenticate)
+        return Coordinator(onComplete: onComplete)
     }
 
     // MARK: - Coordinator
     final class Coordinator: NSObject, WKNavigationDelegate {
-        let didAuthenticate: ([HTTPCookie]) async -> Void
+        let onComplete: (Result) async -> Void
 
-        init(didAuthenticate: @escaping ([HTTPCookie]) async -> Void) {
-            self.didAuthenticate = didAuthenticate
+        init(onComplete: @escaping (Result) async -> Void) {
+            self.onComplete = onComplete
         }
 
         func webView(_ view: WKWebView, didFinish _: WKNavigation!) {
-            guard let url = view.url?.clean(),
-                  url.absoluteString == "https://lmsdocs.fdnycloud.org/dcu/web/"
-            else { return }
+            guard let url = view.url?.clean() else { return }
             Task {
-                let cookies = await view.cookies()
-                await self.didAuthenticate(cookies)
+                switch url.absoluteString {
+                case "https://lmsdocs.fdnycloud.org/dcu/web/":
+                    let cookies = await view.cookies()
+                    await self.onComplete(.authenticated(cookies))
+                case "https://lmsdocs.fdnycloud.org/dcu/web/user/login":
+                    await self.onComplete(.unauthenticated)
+                default: return
+                }
             }
         }
     }

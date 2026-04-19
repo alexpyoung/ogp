@@ -31,7 +31,7 @@ final class ViewModel: ObservableObject {
     func didAuthenticate(using cookies: [HTTPCookie]) async {
         self.cookies = cookies
         self.crawler = await WebCrawler(cookies: cookies)
-        self.state = .authenticated
+        self.crawl()
     }
     
     func data(for pdf: PDFModel) throws -> Data? {

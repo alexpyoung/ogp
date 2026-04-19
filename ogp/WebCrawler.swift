@@ -48,13 +48,13 @@ final class WebCrawler: NSObject, ObservableObject {
             return
         }
         let url = self.queue.removeFirst()
-        if visited.contains(url.absoluteString) ||
-           exclusions.contains(url.absoluteString) ||
+        if self.visited.contains(url.absoluteString) ||
+           self.exclusions.contains(url.absoluteString) ||
            !url.lastPathComponent.hasPrefix("ems-og")
         {
             self.next()
         } else {
-            visited.insert(url.absoluteString)
+            self.visited.insert(url.absoluteString)
             self.view?.load(URLRequest(url: url))
         }
     }
