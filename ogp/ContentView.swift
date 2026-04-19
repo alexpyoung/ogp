@@ -15,7 +15,7 @@ struct ContentView: View {
     
     var body: some View {
         Group {
-            AuthenticationView() {
+            AuthenticationView(url: self.model.baseURL) {
                 switch $0 {
                 case .authenticated: return
                 case .unauthenticated: self.isAuthenticating = true
@@ -28,9 +28,19 @@ struct ContentView: View {
                     isAuthenticating = true
                 }
             case .crawling:
-                ProgressView()
-                    .progressViewStyle(.circular)
-                    .scaleEffect(1.5)
+                VStack(alignment: .center, spacing: 16) {
+                    Text("Finding PDFs")
+                    ProgressView()
+                        .progressViewStyle(.circular)
+                        .scaleEffect(1.5)
+                }
+            case .downloading(let progress):
+                VStack(alignment: .center, spacing: 16) {
+                    Text("Downloading PDFs")
+                    ProgressView(value: progress)
+                        .progressViewStyle(LinearProgressViewStyle())
+                }
+                .padding(.horizontal, 32)
             case .authenticated:
                 TabView {
                     Tab("Documents", systemImage: "tray.full") {
@@ -45,7 +55,7 @@ struct ContentView: View {
             }
         }
         .sheet(isPresented: $isAuthenticating) {
-            AuthenticationView() {
+            AuthenticationView(url: self.model.baseURL) {
                 switch $0 {
                 case .unauthenticated: return
                 case .authenticated(let cookies):

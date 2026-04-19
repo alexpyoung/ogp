@@ -14,12 +14,13 @@ struct AuthenticationView: UIViewRepresentable {
         case unauthenticated
         case authenticated([HTTPCookie])
     }
+    let url: URL?
     let onComplete: (Result) async -> Void
 
     func makeUIView(context: Context) -> WKWebView {
         let view = WKWebView(frame: .zero, configuration: .init())
         view.navigationDelegate = context.coordinator
-        if let url = URL(string: "https://lmsdocs.fdnycloud.org") {
+        if let url = self.url {
             view.load(URLRequest(url: url))
         }
         return view
@@ -42,11 +43,11 @@ struct AuthenticationView: UIViewRepresentable {
         func webView(_ view: WKWebView, didFinish _: WKNavigation!) {
             guard let url = view.url?.clean() else { return }
             Task {
-                switch url.absoluteString {
-                case "https://lmsdocs.fdnycloud.org/dcu/web/":
+                switch url.path() {
+                case "/dcu/web/":
                     let cookies = await view.cookies()
                     await self.onComplete(.authenticated(cookies))
-                case "https://lmsdocs.fdnycloud.org/dcu/web/user/login":
+                case "/dcu/web/user/login":
                     await self.onComplete(.unauthenticated)
                 default: return
                 }

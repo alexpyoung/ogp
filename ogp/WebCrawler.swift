@@ -6,95 +6,124 @@
 //
 
 import Foundation
+import SwiftSoup
 import WebKit
 
 final class WebCrawler: NSObject, ObservableObject {
-    private weak var view: WKWebView?
     private var queue: Set<URL> = []
     private var visited: Set<String> = []
-    private var pdfs: Set<String> = []
-    private let exclusions: Set<String> = [
-        "https://lmsdocs.fdnycloud.org/dcu/web/user/logout"
-    ]
-    fileprivate let baseHost = "lmsdocs.fdnycloud.org"
-    private var onComplete: ((Set<String>) async -> Void)? = nil
+    private var pdfs: Set<URL> = []
+    private let view: AsyncWKWebView
+    let base: URL
     
     @MainActor
-    init(cookies: [HTTPCookie]) async {
-        let dataStore = WKWebsiteDataStore.default()
-        for cookie in cookies {
-            await dataStore.httpCookieStore.setCookie(cookie)
+    init(base: URL, cookies: HTTPCookieStorage = HTTPCookieStorage.shared) async {
+        self.base = base
+        self.view = await AsyncWKWebView(cookies: cookies)
+        super.init()
+    }
+    
+    func start(url: URL) async throws -> Set<URL> {
+        self.queue.insert(url)
+        return try await self.next()
+    }
+    
+    fileprivate func next() async throws -> Set<URL> {
+        guard !self.queue.isEmpty else { return self.pdfs }
+        let url = self.queue.removeFirst()
+        guard isVisitable(url: url) else { return try await self.next() }
+        self.visited.insert(url.absoluteString)
+        let html = try await self.view.html(for: url)
+        let document = try SwiftSoup.parse(html)
+        let anchors = try document.select("a[href]")
+        for anchor in anchors {
+            let href = try anchor.attr("href")
+            if href.lowercased().contains(".pdf"), let url = normalize(href: href) {
+                self.pdfs.insert(url)
+            } else if let url = URL(string: href)?.clean(),
+                      url.host == self.base.host(),
+                      !self.visited.contains(href) {
+                self.queue.insert(url)
+            }
         }
-        let config = WKWebViewConfiguration()
-        config.websiteDataStore = dataStore
-        let view = WKWebView(frame: .zero, configuration: config)
+        return try await self.next()
+    }
+    
+    private func isVisitable(url: URL) -> Bool {
+        let exclusionPaths: Set<String> = [
+            "/dcu/web/user/logout"
+        ]
+        return !self.visited.contains(url.absoluteString) &&
+        !exclusionPaths.contains(url.path()) &&
+        url.lastPathComponent.hasPrefix("ems-og")
+    }
+    
+    private func normalize(href: String) -> URL? {
+        guard let url = URL(string: href) else { return nil }
+        if url.host() == nil  {
+            return URL(string: href, relativeTo: self.base)
+        } else {
+            return url
+        }
+    }
+}
+
+private final class AsyncWKWebView: NSObject {
+    
+    private var view: WKWebView
+    fileprivate var continuation: CheckedContinuation<String, Error>?
+    
+    @MainActor
+    init(cookies: HTTPCookieStorage) async {
+        let view = await WKWebView(cookies: cookies)
         self.view = view
         super.init()
         view.navigationDelegate = self
     }
-
-    func start(url: String, onComplete: @escaping (Set<String>) async -> Void) {
-        guard let url = URL(string: url) else { return }
-        self.queue.insert(url)
-        self.onComplete = onComplete
-        self.next()
-    }
-
-    fileprivate func next() {
-        guard !queue.isEmpty else {
-            Task {
-                await self.onComplete?(pdfs)
-            }
-            return
-        }
-        let url = self.queue.removeFirst()
-        if self.visited.contains(url.absoluteString) ||
-           self.exclusions.contains(url.absoluteString) ||
-           !url.lastPathComponent.hasPrefix("ems-og")
-        {
-            self.next()
-        } else {
-            self.visited.insert(url.absoluteString)
-            self.view?.load(URLRequest(url: url))
-        }
-    }
-}
-
-extension WebCrawler: WKNavigationDelegate {
-
-    func webView(_ view: WKWebView, didFinish _: WKNavigation!) {
-        let js = """
-        Array.from(document.querySelectorAll('a[href]'))
-          .map(a => ({
-            href: new URL(a.getAttribute('href'), document.baseURI).href
-          }))
-        """
-        view.evaluateJavaScript(js) { result, error in
-            guard let anchors = result as? [[String: String]] else {
-                self.next()
-                return
-            }
-            for anchor in anchors {
-                guard let href = anchor["href"] else { continue }
-                if href.lowercased().contains(".pdf") {
-                    self.pdfs.insert(href)
-                } else if let url = URL(string: href)?.clean(),
-                          url.host == self.baseHost,
-                          !self.visited.contains(href) {
-                    self.queue.insert(url)
-                }
-            }
-            self.next()
-        }
-    }
-}
-
-extension URL {
     
-    func clean() -> Self? {
-        var components = URLComponents(url: self, resolvingAgainstBaseURL: true)
-        components?.fragment = nil
-        components?.query = nil
-        return components?.url
+    @MainActor
+    func html(for url: URL) async throws -> String {
+        return try await withCheckedThrowingContinuation {
+            self.continuation = $0
+            self.view.load(URLRequest(url: url))
+        }
+    }
+}
+
+private extension WKWebView {
+    
+    convenience init(cookies: HTTPCookieStorage) async {
+        let dataStore = WKWebsiteDataStore.default()
+        for cookie in cookies.cookies ?? [] {
+            await dataStore.httpCookieStore.setCookie(cookie)
+        }
+        let config = WKWebViewConfiguration()
+        config.websiteDataStore = dataStore
+        self.init(frame: .zero, configuration: config)
+    }
+}
+
+extension AsyncWKWebView: WKNavigationDelegate {
+    
+    func webView(_ view: WKWebView, didFinish _: WKNavigation) {
+        view.evaluateJavaScript("document.documentElement.outerHTML") { result, error in
+            if let error = error {
+                self.continuation?.resume(throwing: error)
+            } else if let string = result as? String {
+                self.continuation?.resume(returning: string)
+            } else {
+                let error = DecodingError.typeMismatch(String.self, .init(
+                    codingPath: [],
+                    debugDescription: "JavaScript evaluation did not return a String"
+                ))
+                self.continuation?.resume(throwing: error)
+            }
+            self.continuation = nil
+        }
+    }
+    
+    func webView(_ _: WKWebView, didFail _: WKNavigation, withError error: Error) {
+        self.continuation?.resume(throwing: error)
+        self.continuation = nil
     }
 }
