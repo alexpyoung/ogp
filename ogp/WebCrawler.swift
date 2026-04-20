@@ -33,8 +33,9 @@ final class WebCrawler: NSObject, ObservableObject {
         self.queue.insert(url)
         self.enqueuedCount += 1
         await MainActor.run {
-            let total = enqueuedCount + Float(self.queue.count)
-            self.progress = enqueuedCount / total
+            let total = self.enqueuedCount + Float(self.queue.count)
+            let progress = self.enqueuedCount / total
+            if progress > self.progress { self.progress = progress }
         }
     }
     
