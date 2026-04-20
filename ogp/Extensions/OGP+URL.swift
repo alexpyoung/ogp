@@ -15,4 +15,8 @@ extension URL {
         components?.query = nil
         return components?.url
     }
+
+    func normalize() -> Self? {
+        return self.clean()?.absoluteURL.standardized
+    }
 }

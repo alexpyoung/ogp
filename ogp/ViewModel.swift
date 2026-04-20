@@ -41,10 +41,11 @@ final class ViewModel: ObservableObject {
             self.state = .crawling(0)
             guard let base = self.baseURL,
                   let start = URL(string: "/dcu/web/ems-og-procedures", relativeTo: base)
-            else {
-                throw URLError(.badURL)
-            }
-            let crawler = await WebCrawler(base: base)
+            else { throw URLError(.badURL) }
+            let exclusions = [
+                URL(string: "/dcu/web/user/logout")
+            ].compactMap { $0 }
+            let crawler = await WebCrawler(base: base, exclusions: exclusions)
             crawler.$progress
                 .sink { self.state = .crawling($0) }
                 .store(in: &cancellables)

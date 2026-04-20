@@ -16,16 +16,18 @@ final class WebCrawler: NSObject, ObservableObject {
     private var enqueuedCount: Float = 0
     @Published private(set) var progress: Float = 0
     let base: URL
+    let exclusions: [URL]
     
     @MainActor
-    init(base: URL, cookies: HTTPCookieStorage = HTTPCookieStorage.shared) async {
+    init(base: URL, exclusions: [URL], cookies: HTTPCookieStorage = HTTPCookieStorage.shared) async {
         self.base = base
+        self.exclusions = exclusions
         self.loader = await HTMLLoader(cookies: cookies)
         super.init()
     }
     
     func start(url: URL) async throws -> Set<String> {
-        await self.insert(url: url.absoluteURL.standardized.absoluteString)
+        await self.insert(url: url.absoluteString)
         return try await self.next([])
     }
     
@@ -40,10 +42,14 @@ final class WebCrawler: NSObject, ObservableObject {
     }
     
     fileprivate func next(_ results: Set<String>) async throws -> Set<String> {
-        if self.queue.isEmpty { return results }
+        if self.queue.isEmpty {
+            return results
+        }
         var results = results
         let url = self.queue.removeFirst()
-        guard isVisitable(url: url) else { return try await self.next(results) }
+        guard self.isVisitable(url: url) else {
+            return try await self.next(results)
+        }
         self.visited.insert(url)
         let html = try await self.loader.string(for: url)
         let document = try SwiftSoup.parse(html)
@@ -57,22 +63,23 @@ final class WebCrawler: NSObject, ObservableObject {
                         NSURLErrorFailingURLErrorKey: href
                     ])
                 }
-            } else if let url = URL(string: href)?.clean(),
-                      url.host == self.base.host,
-                      !self.visited.contains(href) {
-                await self.insert(url: url.absoluteString)
+            } else if let url = URL(string: href)?.normalize()?.absoluteString {
+                await self.insert(url: url)
             }
         }
         return try await self.next(results)
     }
     
     private func isVisitable(url: String) -> Bool {
-        let exclusionPaths: Set<String> = [
-            "/dcu/web/user/logout"
-        ]
-        guard let url = URL(string: url) else { return false }
-        return !self.visited.contains(url.absoluteString) &&
-        !exclusionPaths.contains(url.path) &&
-        url.lastPathComponent.hasPrefix("ems-og")
+        guard let url = URL(string: url) else {
+            return false
+        }
+        if self.visited.contains(url.absoluteString) {
+            return false
+        } else if self.exclusions.contains(where: { $0.path == url.path }) {
+            return false
+        } else {
+            return url.host == self.base.host && url.lastPathComponent.hasPrefix("ems-og")
+        }
     }
 }
