@@ -11,22 +11,21 @@ import SwiftUI
 
 struct DocumentsListView: View {
     
-    let model: ViewModel
+    let store: PDFStore
     @Query private var pdfs: [PDFModel]
     
     var body: some View {
         NavigationStack {
             List(self.pdfs, id: \.id) { pdf in
                 NavigationLink(value: pdf) {
-                    Text(pdf.filename)
+                    Text(pdf.fileName)
                 }
             }
             .navigationTitle("Documents")
             .navigationDestination(for: PDFModel.self) {
-                if let data = try? self.model.data(for: $0) {
-                    PDFKitView(data: data)
-                } else {
-                    Text("Error")
+                switch store.data(for: $0) {
+                case .success(let data): PDFKitView(data: data)
+                case .failure(let error): Text(error.localizedDescription)
                 }
             }
         }

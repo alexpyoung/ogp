@@ -14,32 +14,55 @@ final class PDFStore {
     private let baseUrl: URL
     private let context: ModelContext
     
-    init(context: ModelContext) {
+    init(context: ModelContext) throws {
         self.context = context
-        let appSupport = FileManager.default.urls(
+        guard let support = FileManager.default.urls(
             for: .applicationSupportDirectory,
             in: .userDomainMask
-        ).first!
-        self.baseUrl = appSupport.appendingPathComponent("PDFs", isDirectory: true)
-        try? FileManager.default.createDirectory(
+        ).first else { throw POSIXError(.ENOENT) }
+        self.baseUrl = support.appendingPathComponent("PDFs", isDirectory: true)
+        try FileManager.default.createDirectory(
             at: self.baseUrl,
             withIntermediateDirectories: true
         )
     }
     
-    func load(for id: UUID) throws -> Data? {
-        let descriptor = FetchDescriptor<PDFModel>(predicate: #Predicate { $0.id == id })
-        guard let model = try self.context.fetch(descriptor).first else { return nil }
-        let url = self.baseUrl.appendingPathComponent(model.filename)
-        return try Data(contentsOf: url)
+    func all() throws -> [PDFModel] {
+        return try self.context.fetch(FetchDescriptor())
     }
     
-    func save(filename: String, data: Data, remoteUrl: URL) throws -> PDFModel {
-        let url = self.baseUrl.appendingPathComponent(filename)
-        try data.write(to: url, options: .atomic)
-        let model = PDFModel(url: remoteUrl, filename: filename)
-        self.context.insert(model)
-        try context.save()
-        return model
+    func data(for model: PDFModel) -> Result<Data, Error> {
+        do {
+            let url = self.url(for: model.fileName)
+            return .success(try Data(contentsOf: url))
+        } catch {
+            return .failure(error)
+        }
+    }
+    
+    func save(data: Data, from remotePath: String) throws -> PDFModel {
+        let descriptor = FetchDescriptor<PDFModel>(predicate: #Predicate {
+            $0.remotePath == remotePath
+        })
+        if let model = try self.context.fetch(descriptor).first {
+            model.updatedAt = Date()
+            let localUrl = self.url(for: model.fileName)
+            try data.write(to: localUrl, options: .atomic)
+            return model
+        } else if let url = URL(string: remotePath) {
+            let model = PDFModel(remotePath: remotePath, fileName: url.lastPathComponent)
+            self.context.insert(model)
+            let localUrl = self.url(for: model.fileName)
+            try data.write(to: localUrl, options: .atomic)
+            return model
+        } else {
+            throw URLError(.badURL, userInfo: [
+                NSURLErrorFailingURLErrorKey: remotePath
+            ])
+        }
+    }
+    
+    private func url(for fileName: String) -> URL {
+        return self.baseUrl.appendingPathComponent(fileName).standardizedFileURL
     }
 }

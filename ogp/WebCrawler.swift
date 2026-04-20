@@ -10,10 +10,12 @@ import SwiftSoup
 import WebKit
 
 final class WebCrawler: NSObject, ObservableObject {
-    private var queue: Set<URL> = []
+    
+    private var queue: Set<String> = []
     private var visited: Set<String> = []
-    private var pdfs: Set<URL> = []
     private let view: AsyncWKWebView
+    private var enqueuedCount: Float = 0
+    @Published private(set) var progress: Float = 0
     let base: URL
     
     @MainActor
@@ -23,48 +25,55 @@ final class WebCrawler: NSObject, ObservableObject {
         super.init()
     }
     
-    func start(url: URL) async throws -> Set<URL> {
-        self.queue.insert(url)
-        return try await self.next()
+    func start(url: URL) async throws -> Set<String> {
+        await self.insert(url: url.absoluteURL.standardized.absoluteString)
+        return try await self.next([])
     }
     
-    fileprivate func next() async throws -> Set<URL> {
-        guard !self.queue.isEmpty else { return self.pdfs }
+    private func insert(url: String) async {
+        self.queue.insert(url)
+        self.enqueuedCount += 1
+        await MainActor.run {
+            let total = enqueuedCount + Float(self.queue.count)
+            self.progress = enqueuedCount / total
+        }
+    }
+    
+    fileprivate func next(_ results: Set<String>) async throws -> Set<String> {
+        if self.queue.isEmpty { return results }
+        var results = results
         let url = self.queue.removeFirst()
-        guard isVisitable(url: url) else { return try await self.next() }
-        self.visited.insert(url.absoluteString)
+        guard isVisitable(url: url) else { return try await self.next(results) }
+        self.visited.insert(url)
         let html = try await self.view.html(for: url)
         let document = try SwiftSoup.parse(html)
-        let anchors = try document.select("a[href]")
-        for anchor in anchors {
+        for anchor in try document.select("a[href]") {
             let href = try anchor.attr("href")
-            if href.lowercased().contains(".pdf"), let url = normalize(href: href) {
-                self.pdfs.insert(url)
+            if href.lowercased().contains(".pdf") {
+                if let url = href.removingPercentEncoding {
+                    results.insert(url)
+                } else {
+                    throw URLError(.unsupportedURL, userInfo: [
+                        NSURLErrorFailingURLErrorKey: href
+                    ])
+                }
             } else if let url = URL(string: href)?.clean(),
-                      url.host == self.base.host(),
+                      url.host == self.base.host,
                       !self.visited.contains(href) {
-                self.queue.insert(url)
+                await self.insert(url: url.absoluteString)
             }
         }
-        return try await self.next()
+        return try await self.next(results)
     }
     
-    private func isVisitable(url: URL) -> Bool {
+    private func isVisitable(url: String) -> Bool {
         let exclusionPaths: Set<String> = [
             "/dcu/web/user/logout"
         ]
+        guard let url = URL(string: url) else { return false }
         return !self.visited.contains(url.absoluteString) &&
-        !exclusionPaths.contains(url.path()) &&
+        !exclusionPaths.contains(url.path) &&
         url.lastPathComponent.hasPrefix("ems-og")
-    }
-    
-    private func normalize(href: String) -> URL? {
-        guard let url = URL(string: href) else { return nil }
-        if url.host() == nil  {
-            return URL(string: href, relativeTo: self.base)
-        } else {
-            return url
-        }
     }
 }
 
@@ -82,8 +91,14 @@ private final class AsyncWKWebView: NSObject {
     }
     
     @MainActor
-    func html(for url: URL) async throws -> String {
+    func html(for url: String) async throws -> String {
         return try await withCheckedThrowingContinuation {
+            guard let url = URL(string: url) else {
+                $0.resume(throwing: URLError(.badURL, userInfo: [
+                    NSURLErrorFailingURLErrorKey: url,
+                ]))
+                return
+            }
             self.continuation = $0
             self.view.load(URLRequest(url: url))
         }

@@ -5,13 +5,15 @@
 //  Created by Alex Young on 4/14/26.
 //
 
+import Combine
 import SwiftData
 import SwiftUI
 import WebKit
 
 enum AppState {
+    case uninitialized
     case unauthenticated
-    case crawling
+    case crawling(Float)
     case downloading(Float)
     case authenticated
     case error(Error)
@@ -20,10 +22,10 @@ enum AppState {
 @MainActor
 final class ViewModel: ObservableObject {
     
-    @Published private(set) var state: AppState = .unauthenticated
-    private var crawler: WebCrawler?
-    private let store: PDFStore
+    @Published private(set) var state: AppState = .uninitialized
+    let store: PDFStore
     let baseURL = URL(string: "https://lmsdocs.fdnycloud.org")
+    private var cancellables = Set<AnyCancellable>()
     
     init(store: PDFStore) {
         self.store = store
@@ -31,34 +33,44 @@ final class ViewModel: ObservableObject {
     
     func didAuthenticate(using cookies: [HTTPCookie]) async {
         cookies.forEach(HTTPCookieStorage.shared.setCookie)
-        guard let base = self.baseURL else { return }
-        self.crawler = await WebCrawler(base: base)
-        do { try await self.crawl() }
-        catch { self.state = .error(error) }
+        self.state = .authenticated
     }
     
-    func data(for pdf: PDFModel) throws -> Data? {
-        return try self.store.load(for: pdf.id)
-    }
-
-    private func crawl() async throws {
-        self.state = .crawling
-        guard let crawler = self.crawler,
-              let start = URL(string: "/dcu/web/ems-og-procedures", relativeTo: self.baseURL)
-        else { return }
-        let results = try await crawler.start(url: start)
-        try await self.download(pdfs: results)
+    func crawl() async {
+        do {
+            self.state = .crawling(0)
+            guard let base = self.baseURL,
+                  let start = URL(string: "/dcu/web/ems-og-procedures", relativeTo: base)
+            else {
+                throw URLError(.badURL)
+            }
+            let crawler = await WebCrawler(base: base)
+            crawler.$progress
+                .sink { self.state = .crawling($0) }
+                .store(in: &cancellables)
+            let results = try await crawler.start(url: start)
+            let existing = Set(try self.store.all().map { $0.remotePath })
+            let targets = results.subtracting(existing).compactMap { URL(string: $0, relativeTo: self.baseURL)}
+            try await self.download(pdfs: targets)
+        } catch {
+            self.state = .error(error)
+        }
     }
     
-    private func download(pdfs: Set<URL>) async throws {
+    func sync() async {
+        do {
+            let urls = try self.store.all().compactMap { URL(string: $0.remotePath, relativeTo: self.baseURL) }
+            try await self.download(pdfs: urls)
+        } catch {
+            self.state = .error(error)
+        }
+    }
+    
+    private func download(pdfs: [URL]) async throws {
         let session = URLSession(cookies: HTTPCookieStorage.shared)
         for (index, url) in pdfs.enumerated() {
             let (data, _) = try await session.data(from: url)
-            let _ = try self.store.save(
-                filename: url.lastPathComponent,
-                data: data,
-                remoteUrl: url
-            )
+            let _ = try self.store.save(data: data, from: url.path)
             self.state = .downloading(Float(index + 1) / Float(pdfs.count))
         }
         self.state = .authenticated

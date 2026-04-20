@@ -12,16 +12,16 @@ import SwiftData
 final class PDFModel {
     
     private(set) var id: UUID
-    private(set) var remoteUrl: URL
+    private(set) var remotePath: String
+    private(set) var fileName: String
     private(set) var createdAt: Date
-    private(set) var updatedAt: Date
-    private(set) var filename: String
-    
-    init(url: URL, filename: String) {
+    var updatedAt: Date
+
+    init(remotePath: String, fileName: String) {
         self.id = UUID()
-        self.remoteUrl = url
-        self.filename = filename
         self.createdAt = Date()
         self.updatedAt = Date()
+        self.remotePath = remotePath
+        self.fileName = fileName
     }
 }

@@ -12,46 +12,75 @@ struct ContentView: View {
     
     @StateObject var model: ViewModel
     @State private var isAuthenticating = false
+    @State private var error: Error?
     
+    private let scrim: some View = Color.black.opacity(0.2).ignoresSafeArea()
+    private var settings: some View {
+        NavigationStack {
+            List {
+                Button("Sync New PDFs") {
+                    Task { await self.model.crawl() }
+                }
+                Button("Refresh PDFs") {
+                    Task { await self.model.sync() }
+                }
+            }
+            .navigationTitle("Settings")
+        }
+    }
     var body: some View {
-        Group {
+        ZStack {
             AuthenticationView(url: self.model.baseURL) {
                 switch $0 {
-                case .authenticated: return
-                case .unauthenticated: self.isAuthenticating = true
+                case .authenticated(let cookies):
+                    await self.model.didAuthenticate(using: cookies)
+                case .unauthenticated:
+                    self.isAuthenticating = true
                 }
             }
             .frame(width: .zero, height: .zero)
-            switch model.state {
-            case .unauthenticated:
-                Button("Login") {
-                    isAuthenticating = true
+            TabView {
+                Tab("Documents", systemImage: "tray.full") {
+                    DocumentsListView(store: model.store)
                 }
-            case .crawling:
+                Tab("Settings", systemImage: "gear") {
+                    self.settings
+                }
+            }
+            switch model.state {
+            case .uninitialized:
+                scrim
+                ProgressView()
+                    .progressViewStyle(.circular)
+                    .scaleEffect(1.5)
+            case .unauthenticated:
+                scrim
+                Button("Login") { isAuthenticating = true }
+            case .crawling(let progress):
+                scrim
                 VStack(alignment: .center, spacing: 16) {
                     Text("Finding PDFs")
-                    ProgressView()
-                        .progressViewStyle(.circular)
-                        .scaleEffect(1.5)
-                }
+                    ProgressView(value: progress)
+                        .progressViewStyle(LinearProgressViewStyle())
+                    
+                }.modifier(ListCardStyle())
             case .downloading(let progress):
+                scrim
                 VStack(alignment: .center, spacing: 16) {
                     Text("Downloading PDFs")
                     ProgressView(value: progress)
                         .progressViewStyle(LinearProgressViewStyle())
-                }
-                .padding(.horizontal, 32)
-            case .authenticated:
-                TabView {
-                    Tab("Documents", systemImage: "tray.full") {
-                        DocumentsListView(model: self.model)
-                    }
-                    Tab("Settings", systemImage: "gear") {
-                        Text("Settings")
-                    }
-                }
+                }.modifier(ListCardStyle())
+            case .authenticated: EmptyView()
             case .error(let error):
-                Text(error.localizedDescription)
+                Spacer()
+                    .frame(height: 0)
+                    .alert(
+                        "Error",
+                        isPresented: .constant(true),
+                        actions: { Button("OK") {} },
+                        message: { Text(error.localizedDescription) }
+                    )
             }
         }
         .sheet(isPresented: $isAuthenticating) {
@@ -61,8 +90,21 @@ struct ContentView: View {
                 case .authenticated(let cookies):
                     self.isAuthenticating = false
                     await self.model.didAuthenticate(using: cookies)
+                    await self.model.crawl()
                 }
             }
         }
+    }
+}
+
+private struct ListCardStyle: ViewModifier {
+    
+    func body(content: Content) -> some View {
+        content
+            .padding(.horizontal, 20)
+            .padding(.vertical, 24)
+            .background(Color(.secondarySystemBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .padding(.horizontal, 20)
     }
 }

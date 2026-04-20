@@ -43,8 +43,8 @@ struct AuthenticationView: UIViewRepresentable {
         func webView(_ view: WKWebView, didFinish _: WKNavigation!) {
             guard let url = view.url?.clean() else { return }
             Task {
-                switch url.path() {
-                case "/dcu/web/":
+                switch url.path {
+                case "/dcu/web":
                     let cookies = await view.cookies()
                     await self.onComplete(.authenticated(cookies))
                 case "/dcu/web/user/login":
