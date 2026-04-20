@@ -7,13 +7,12 @@
 
 import Foundation
 import SwiftSoup
-import WebKit
 
 final class WebCrawler: NSObject, ObservableObject {
     
     private var queue: Set<String> = []
     private var visited: Set<String> = []
-    private let view: AsyncWKWebView
+    private let loader: HTMLLoader
     private var enqueuedCount: Float = 0
     @Published private(set) var progress: Float = 0
     let base: URL
@@ -21,7 +20,7 @@ final class WebCrawler: NSObject, ObservableObject {
     @MainActor
     init(base: URL, cookies: HTTPCookieStorage = HTTPCookieStorage.shared) async {
         self.base = base
-        self.view = await AsyncWKWebView(cookies: cookies)
+        self.loader = await HTMLLoader(cookies: cookies)
         super.init()
     }
     
@@ -45,7 +44,7 @@ final class WebCrawler: NSObject, ObservableObject {
         let url = self.queue.removeFirst()
         guard isVisitable(url: url) else { return try await self.next(results) }
         self.visited.insert(url)
-        let html = try await self.view.html(for: url)
+        let html = try await self.loader.string(for: url)
         let document = try SwiftSoup.parse(html)
         for anchor in try document.select("a[href]") {
             let href = try anchor.attr("href")
@@ -74,71 +73,5 @@ final class WebCrawler: NSObject, ObservableObject {
         return !self.visited.contains(url.absoluteString) &&
         !exclusionPaths.contains(url.path) &&
         url.lastPathComponent.hasPrefix("ems-og")
-    }
-}
-
-private final class AsyncWKWebView: NSObject {
-    
-    private var view: WKWebView
-    fileprivate var continuation: CheckedContinuation<String, Error>?
-    
-    @MainActor
-    init(cookies: HTTPCookieStorage) async {
-        let view = await WKWebView(cookies: cookies)
-        self.view = view
-        super.init()
-        view.navigationDelegate = self
-    }
-    
-    @MainActor
-    func html(for url: String) async throws -> String {
-        return try await withCheckedThrowingContinuation {
-            guard let url = URL(string: url) else {
-                $0.resume(throwing: URLError(.badURL, userInfo: [
-                    NSURLErrorFailingURLErrorKey: url,
-                ]))
-                return
-            }
-            self.continuation = $0
-            self.view.load(URLRequest(url: url))
-        }
-    }
-}
-
-private extension WKWebView {
-    
-    convenience init(cookies: HTTPCookieStorage) async {
-        let dataStore = WKWebsiteDataStore.default()
-        for cookie in cookies.cookies ?? [] {
-            await dataStore.httpCookieStore.setCookie(cookie)
-        }
-        let config = WKWebViewConfiguration()
-        config.websiteDataStore = dataStore
-        self.init(frame: .zero, configuration: config)
-    }
-}
-
-extension AsyncWKWebView: WKNavigationDelegate {
-    
-    func webView(_ view: WKWebView, didFinish _: WKNavigation) {
-        view.evaluateJavaScript("document.documentElement.outerHTML") { result, error in
-            if let error = error {
-                self.continuation?.resume(throwing: error)
-            } else if let string = result as? String {
-                self.continuation?.resume(returning: string)
-            } else {
-                let error = DecodingError.typeMismatch(String.self, .init(
-                    codingPath: [],
-                    debugDescription: "JavaScript evaluation did not return a String"
-                ))
-                self.continuation?.resume(throwing: error)
-            }
-            self.continuation = nil
-        }
-    }
-    
-    func webView(_ _: WKWebView, didFail _: WKNavigation, withError error: Error) {
-        self.continuation?.resume(throwing: error)
-        self.continuation = nil
     }
 }
