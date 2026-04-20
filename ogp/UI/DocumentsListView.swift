@@ -13,6 +13,7 @@ struct DocumentsListView: View {
     
     let store: PDFStore
     @Query private var pdfs: [PDFModel]
+    @State private var search = ""
     var grouped: [(key: String, value: [PDFModel])] {
         let values = search.count > 0
         ? pdfs.filter { $0.fileName.contains(search) }
@@ -39,6 +40,7 @@ struct DocumentsListView: View {
                         }
                 }
             }
+            .searchable(text: $search)
             .navigationTitle("Documents")
             .navigationDestination(for: PDFModel.self) {
                 switch store.data(for: $0) {
@@ -47,5 +49,13 @@ struct DocumentsListView: View {
                 }
             }
         }
+    }
+}
+
+private struct SectionTitle: View {
+    
+    let text: String
+    var body: some View {
+        Text(text).font(.headline).fontWeight(.semibold)
     }
 }
