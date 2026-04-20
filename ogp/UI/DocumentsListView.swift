@@ -13,12 +13,30 @@ struct DocumentsListView: View {
     
     let store: PDFStore
     @Query private var pdfs: [PDFModel]
+    var grouped: [(key: String, value: [PDFModel])] {
+        let values = search.count > 0
+        ? pdfs.filter { $0.fileName.contains(search) }
+        : pdfs
+        return Dictionary(grouping: values) { model in
+            String(model.fileName.split(separator: "_").first ?? "")
+        }
+        .map { (key: $0.key, value: $0.value.sorted { (lhs, rhs) in
+            return lhs.fileName < rhs.fileName
+        }) }
+        .sorted { $0.key < $1.key }
+    }
     
     var body: some View {
         NavigationStack {
-            List(self.pdfs, id: \.id) { pdf in
-                NavigationLink(value: pdf) {
-                    Text(pdf.fileName)
+            List {
+                ForEach(grouped, id: \.key) { group in
+                    Section(header: SectionTitle(text: "Section \(group.key)")) {
+                            ForEach(group.value, id: \.self) { model in
+                                NavigationLink(value: model) {
+                                    Text(model.fileName)
+                                }
+                            }
+                        }
                 }
             }
             .navigationTitle("Documents")
