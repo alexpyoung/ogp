@@ -9,7 +9,7 @@ import Foundation
 import SwiftData
 
 @MainActor
-final class PDFStore {
+struct PDFStore {
     
     private let baseUrl: URL
     private let context: ModelContext
@@ -41,19 +41,22 @@ final class PDFStore {
     }
     
     func save(data: Data, from remotePath: String) throws -> PDFModel {
+        let model = try self.model(from: remotePath)
+        let localUrl = self.url(for: model.fileName)
+        try data.write(to: localUrl, options: .atomic)
+        return model
+    }
+    
+    private func model(from remotePath: String) throws -> PDFModel {
         let descriptor = FetchDescriptor<PDFModel>(predicate: #Predicate {
             $0.remotePath == remotePath
         })
         if let model = try self.context.fetch(descriptor).first {
             model.updatedAt = Date()
-            let localUrl = self.url(for: model.fileName)
-            try data.write(to: localUrl, options: .atomic)
             return model
         } else if let url = URL(string: remotePath) {
             let model = PDFModel(remotePath: remotePath, fileName: url.lastPathComponent)
             self.context.insert(model)
-            let localUrl = self.url(for: model.fileName)
-            try data.write(to: localUrl, options: .atomic)
             return model
         } else {
             throw URLError(.badURL, userInfo: [
