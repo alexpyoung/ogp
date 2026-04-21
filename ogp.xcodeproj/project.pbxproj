@@ -30,7 +30,6 @@
 /* Begin PBXFileReference section */
 		FAC4B6DD2F887B95002E2245 /* ogp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ogp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FAC4B6EE2F887B97002E2245 /* ogpTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ogpTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		FAC4B6F82F887B97002E2245 /* ogpUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ogpUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -42,11 +41,6 @@
 		FAC4B6F12F887B97002E2245 /* ogpTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = ogpTests;
-			sourceTree = "<group>";
-		};
-		FAC4B6FB2F887B97002E2245 /* ogpUITests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = ogpUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -82,7 +76,6 @@
 			children = (
 				FAC4B6DF2F887B95002E2245 /* ogp */,
 				FAC4B6F12F887B97002E2245 /* ogpTests */,
-				FAC4B6FB2F887B97002E2245 /* ogpUITests */,
 				FAC4B6DE2F887B95002E2245 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -92,7 +85,6 @@
 			children = (
 				FAC4B6DD2F887B95002E2245 /* ogp.app */,
 				FAC4B6EE2F887B97002E2245 /* ogpTests.xctest */,
-				FAC4B6F82F887B97002E2245 /* ogpUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -146,29 +138,6 @@
 			productReference = FAC4B6EE2F887B97002E2245 /* ogpTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		FAC4B6F72F887B97002E2245 /* ogpUITests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = FAC4B7082F887B97002E2245 /* Build configuration list for PBXNativeTarget "ogpUITests" */;
-			buildPhases = (
-				FAC4B6F42F887B97002E2245 /* Sources */,
-				FAC4B6F52F887B97002E2245 /* Frameworks */,
-				FAC4B6F62F887B97002E2245 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				FAC4B6FA2F887B97002E2245 /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				FAC4B6FB2F887B97002E2245 /* ogpUITests */,
-			);
-			name = ogpUITests;
-			packageProductDependencies = (
-			);
-			productName = ogpUITests;
-			productReference = FAC4B6F82F887B97002E2245 /* ogpUITests.xctest */;
-			productType = "com.apple.product-type.bundle.ui-testing";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -211,7 +180,6 @@
 			targets = (
 				FAC4B6DC2F887B95002E2245 /* ogp */,
 				FAC4B6ED2F887B97002E2245 /* ogpTests */,
-				FAC4B6F72F887B97002E2245 /* ogpUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -518,50 +486,6 @@
 			};
 			name = Release;
 		};
-		FAC4B7092F887B97002E2245 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = ML4K9AC7JP;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
-				MACOSX_DEPLOYMENT_TARGET = 14.8;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = io.alexpyoung.ogp.ogpUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
-				TEST_TARGET_NAME = ogp;
-				XROS_DEPLOYMENT_TARGET = 2.2;
-			};
-			name = Debug;
-		};
-		FAC4B70A2F887B97002E2245 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = ML4K9AC7JP;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
-				MACOSX_DEPLOYMENT_TARGET = 14.8;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = io.alexpyoung.ogp.ogpUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
-				TEST_TARGET_NAME = ogp;
-				XROS_DEPLOYMENT_TARGET = 2.2;
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -588,15 +512,6 @@
 			buildConfigurations = (
 				FAC4B7062F887B97002E2245 /* Debug */,
 				FAC4B7072F887B97002E2245 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		FAC4B7082F887B97002E2245 /* Build configuration list for PBXNativeTarget "ogpUITests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				FAC4B7092F887B97002E2245 /* Debug */,
-				FAC4B70A2F887B97002E2245 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
