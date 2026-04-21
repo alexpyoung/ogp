@@ -8,21 +8,6 @@
 import SwiftData
 import SwiftUI
 
-struct AppTab: Identifiable {
-    let id = UUID()
-    let content: AnyView
-    let tabItem: AnyView
-    
-    init<Content: View>(
-        title: String,
-        systemImage: String,
-        @ViewBuilder content: @escaping () -> Content
-    ) {
-        self.content = AnyView(content())
-        self.tabItem = AnyView(Label(title, systemImage: systemImage))
-    }
-}
-
 struct ContentView: View {
     
     @StateObject var model: ViewModel
@@ -72,14 +57,13 @@ struct ContentView: View {
             }
             .frame(width: .zero, height: .zero)
             TabView {
-                ForEach([
-                    AppTab(title: "Documents", systemImage: "tray.full") {
-                        DocumentsListView(store: model.store)
-                    },
-                    AppTab(title: "Settings", systemImage: "gear") {
-                        self.settings
+                DocumentsListView(store: model.store)
+                    .tabItem {
+                        Label("Documents", systemImage: "tray.full")
                     }
-                ]) { tab in tab.content.tabItem { tab.tabItem }}
+                self.settings.tabItem {
+                    Label("Settings", systemImage: "gear")
+                }
             }
             switch model.state {
             case .uninitialized:
