@@ -14,6 +14,7 @@ struct DocumentsListView: View {
     let store: PDFStore
     @Query private var pdfs: [PDFModel]
     @State private var search = ""
+    @State private var isSharing = false
     var grouped: [(key: String, value: [PDFModel])] {
         let values = search.count > 0
         ? pdfs.filter { $0.fileName.contains(search) }
@@ -36,14 +37,26 @@ struct DocumentsListView: View {
             }
             .searchable(text: $search)
             .navigationTitle("Documents")
-            .navigationDestination(for: PDFModel.self) {
-                switch store.data(for: $0) {
+            .navigationDestination(for: PDFModel.self) { model in
+                switch store.data(for: model) {
                 case .success(let data):
                     PDFKitView(data: data)
-                        .navigationTitle($0.fileName)
+                        .navigationTitle(model.fileName)
                         #if os(iOS)
                         .navigationBarTitleDisplayMode(.inline)
                         #endif
+                        .toolbar {
+                            ToolbarItem(placement: .primaryAction) {
+                                Button {
+                                    isSharing = true
+                                } label: {
+                                    Image(systemName: "square.and.arrow.up")
+                                }
+                            }
+                        }
+                        .sheet(isPresented: $isSharing) {
+                            ActivityView(items: [store.url(for: model)])
+                        }
                 case .failure(let error):
                     Text(error.localizedDescription)
                 }

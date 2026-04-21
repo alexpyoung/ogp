@@ -33,8 +33,7 @@ struct PDFStore {
     
     func data(for model: PDFModel) -> Result<Data, Error> {
         do {
-            let url = self.url(for: model.fileName)
-            return .success(try Data(contentsOf: url))
+            return .success(try Data(contentsOf: self.url(for: model)))
         } catch {
             return .failure(error)
         }
@@ -42,8 +41,7 @@ struct PDFStore {
     
     func save(data: Data, from remotePath: String) throws -> PDFModel {
         let model = try self.model(from: remotePath)
-        let localUrl = self.url(for: model.fileName)
-        try data.write(to: localUrl, options: .atomic)
+        try data.write(to: self.url(for: model), options: .atomic)
         return model
     }
     
@@ -65,7 +63,9 @@ struct PDFStore {
         }
     }
     
-    private func url(for fileName: String) -> URL {
-        return self.baseUrl.appendingPathComponent(fileName).standardizedFileURL
+    func url(for model: PDFModel) -> URL {
+        return self.baseUrl
+            .appendingPathComponent(model.fileName)
+            .standardizedFileURL
     }
 }
