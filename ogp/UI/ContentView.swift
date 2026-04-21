@@ -28,6 +28,20 @@ struct ContentView: View {
     @StateObject var model: ViewModel
     @State private var isAuthenticating = false
     @State private var error: Error?
+    private var authenticationUrl: URL? {
+        if case .unauthenticated = self.model.state {
+            self.model.baseURL
+        } else {
+            URL(string: "/dcu/web/user/logout", relativeTo: self.model.baseURL)
+        }
+    }
+    private var authenticationText: String {
+        if case .unauthenticated = self.model.state {
+            "Login"
+        } else {
+            "Logout"
+        }
+    }
     
     private let scrim: some View = Color.black.opacity(0.2).ignoresSafeArea()
     private var settings: some View {
@@ -38,6 +52,9 @@ struct ContentView: View {
                 }
                 Button("Refresh PDFs") {
                     Task { await self.model.sync() }
+                }
+                Button(authenticationText) {
+                    self.isAuthenticating = true
                 }
             }
             .navigationTitle("Settings")
@@ -101,7 +118,7 @@ struct ContentView: View {
             }
         }
         .sheet(isPresented: $isAuthenticating) {
-            AuthenticationView(url: self.model.baseURL) {
+            AuthenticationView(url: authenticationUrl) {
                 switch $0 {
                 case .unauthenticated: return
                 case .authenticated(let cookies):
