@@ -8,18 +8,26 @@
 import Foundation
 import WebKit
 
+protocol HTMLProvider {
+
+    func string(for url: String) async throws -> String
+}
+
 @MainActor
 final class HTMLLoader: NSObject {
     
     private let view: WKWebView
-    fileprivate var continuation: CheckedContinuation<String, Error>?
+    private var continuation: CheckedContinuation<String, Error>?
     
     init(cookies: HTTPCookieStorage) async {
         self.view = await WKWebView(cookies: cookies)
         super.init()
         self.view.navigationDelegate = self
     }
-    
+}
+
+extension HTMLLoader: HTMLProvider {
+
     func string(for url: String) async throws -> String {
         return try await withCheckedThrowingContinuation {
             if let url = URL(string: url) {

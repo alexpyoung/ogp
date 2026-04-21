@@ -12,26 +12,25 @@ final class WebCrawler: NSObject, ObservableObject {
     
     private var queue: Set<String> = []
     private var visited: Set<String> = []
-    private let loader: HTMLLoader
+    private let loader: HTMLProvider
     private var enqueuedCount: Float = 0
     @Published private(set) var progress: Float = 0
     let base: URL
     let exclusions: [URL]
     
-    @MainActor
-    init(base: URL, exclusions: [URL], cookies: HTTPCookieStorage = HTTPCookieStorage.shared) async {
+    init(base: URL, exclusions: [URL], loader: HTMLProvider) {
         self.base = base
         self.exclusions = exclusions
-        self.loader = await HTMLLoader(cookies: cookies)
+        self.loader = loader
         super.init()
     }
     
     func start(url: URL) async throws -> Set<String> {
-        await self.insert(url: url.absoluteString)
+        await self.enqueue(url: url.absoluteString)
         return try await self.next([])
     }
     
-    private func insert(url: String) async {
+    private func enqueue(url: String) async {
         self.queue.insert(url)
         self.enqueuedCount += 1
         await MainActor.run {
@@ -41,7 +40,7 @@ final class WebCrawler: NSObject, ObservableObject {
         }
     }
     
-    fileprivate func next(_ results: Set<String>) async throws -> Set<String> {
+    private func next(_ results: Set<String>) async throws -> Set<String> {
         if self.queue.isEmpty {
             return results
         }
@@ -64,7 +63,7 @@ final class WebCrawler: NSObject, ObservableObject {
                     ])
                 }
             } else if let url = URL(string: href)?.normalize()?.absoluteString {
-                await self.insert(url: url)
+                await self.enqueue(url: url)
             }
         }
         return try await self.next(results)

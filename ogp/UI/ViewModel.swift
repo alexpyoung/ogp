@@ -45,7 +45,8 @@ final class ViewModel: ObservableObject {
             let exclusions = [
                 URL(string: "/dcu/web/user/logout")
             ].compactMap { $0 }
-            let crawler = await WebCrawler(base: base, exclusions: exclusions)
+            let loader = await HTMLLoader(cookies: HTTPCookieStorage.shared)
+            let crawler = WebCrawler(base: base, exclusions: exclusions, loader: loader)
             crawler.$progress
                 .sink { self.state = .crawling($0) }
                 .store(in: &cancellables)
