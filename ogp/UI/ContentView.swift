@@ -8,6 +8,21 @@
 import SwiftData
 import SwiftUI
 
+struct AppTab: Identifiable {
+    let id = UUID()
+    let content: AnyView
+    let tabItem: AnyView
+    
+    init<Content: View>(
+        title: String,
+        systemImage: String,
+        @ViewBuilder content: @escaping () -> Content
+    ) {
+        self.content = AnyView(content())
+        self.tabItem = AnyView(Label(title, systemImage: systemImage))
+    }
+}
+
 struct ContentView: View {
     
     @StateObject var model: ViewModel
@@ -40,12 +55,14 @@ struct ContentView: View {
             }
             .frame(width: .zero, height: .zero)
             TabView {
-                Tab("Documents", systemImage: "tray.full") {
-                    DocumentsListView(store: model.store)
-                }
-                Tab("Settings", systemImage: "gear") {
-                    self.settings
-                }
+                ForEach([
+                    AppTab(title: "Documents", systemImage: "tray.full") {
+                        DocumentsListView(store: model.store)
+                    },
+                    AppTab(title: "Settings", systemImage: "gear") {
+                        self.settings
+                    }
+                ]) { tab in tab.content.tabItem { tab.tabItem }}
             }
             switch model.state {
             case .uninitialized:
@@ -93,6 +110,9 @@ struct ContentView: View {
                     await self.model.crawl()
                 }
             }
+            #if os(macOS)
+            .frame(minWidth: 400, minHeight: 700)
+            #endif
         }
     }
 }
@@ -103,8 +123,12 @@ private struct ListCardStyle: ViewModifier {
         content
             .padding(.horizontal, 20)
             .padding(.vertical, 24)
+            #if os(iOS)
             .background(Color(.secondarySystemBackground))
+            #elseif os(macOS)
+            .background(Color(NSColor.controlBackgroundColor))
+            #endif
             .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-            .padding(.horizontal, 20)
+            .padding(.horizontal, 18)
     }
 }

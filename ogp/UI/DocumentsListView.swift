@@ -41,7 +41,9 @@ struct DocumentsListView: View {
                 case .success(let data):
                     PDFKitView(data: data)
                         .navigationTitle($0.fileName)
+                        #if os(iOS)
                         .navigationBarTitleDisplayMode(.inline)
+                        #endif
                 case .failure(let error):
                     Text(error.localizedDescription)
                 }

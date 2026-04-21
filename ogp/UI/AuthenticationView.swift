@@ -8,39 +8,29 @@
 import SwiftUI
 import WebKit
 
-struct AuthenticationView: UIViewRepresentable {
+struct AuthenticationView {
     
     enum Result {
         case unauthenticated
         case authenticated([HTTPCookie])
     }
+    
     let url: URL?
     let onComplete: (Result) async -> Void
-
-    func makeUIView(context: Context) -> WKWebView {
-        let view = WKWebView(frame: .zero, configuration: .init())
-        view.navigationDelegate = context.coordinator
-        if let url = self.url {
-            view.load(URLRequest(url: url))
-        }
-        return view
-    }
-
-    func updateUIView(_ webView: WKWebView, context: Context) {}
-
+    
     func makeCoordinator() -> Coordinator {
         return Coordinator(onComplete: onComplete)
     }
-
-    // MARK: - Coordinator
+    
     final class Coordinator: NSObject, WKNavigationDelegate {
+        
         let onComplete: (Result) async -> Void
 
         init(onComplete: @escaping (Result) async -> Void) {
             self.onComplete = onComplete
         }
 
-        func webView(_ view: WKWebView, didFinish _: WKNavigation!) {
+        func webView(_ view: WKWebView, didFinish _: WKNavigation) {
             guard let url = view.url?.clean() else { return }
             Task {
                 switch url.path {
@@ -55,3 +45,33 @@ struct AuthenticationView: UIViewRepresentable {
         }
     }
 }
+
+#if os(iOS)
+extension AuthenticationView: UIViewRepresentable {
+    
+    func makeUIView(context: Context) -> WKWebView {
+        let view = WKWebView(frame: .zero, configuration: .init())
+        view.navigationDelegate = context.coordinator
+        if let url = self.url {
+            view.load(URLRequest(url: url))
+        }
+        return view
+    }
+
+    func updateUIView(_ webView: WKWebView, context: Context) {}
+}
+#elseif os(macOS)
+extension AuthenticationView: NSViewRepresentable {
+    
+    func makeNSView(context: Context) -> WKWebView {
+        let view = WKWebView(frame: .zero, configuration: .init())
+        view.navigationDelegate = context.coordinator
+        if let url = self.url {
+            view.load(URLRequest(url: url))
+        }
+        return view
+    }
+    
+    func updateNSView(_ nsView: WKWebView, context: Context) {}
+}
+#endif
