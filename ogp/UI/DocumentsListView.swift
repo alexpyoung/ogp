@@ -30,22 +30,41 @@ struct DocumentsListView: View {
     var body: some View {
         NavigationStack {
             List {
-                ForEach(grouped, id: \.key) { group in
-                    Section(header: SectionTitle(text: "Section \(group.key)")) {
-                            ForEach(group.value, id: \.self) { model in
-                                NavigationLink(value: model) {
-                                    Text(model.fileName)
-                                }
-                            }
-                        }
+                ForEach(grouped, id: \.key) {
+                    DocumentSection(group: $0)
                 }
             }
             .searchable(text: $search)
             .navigationTitle("Documents")
             .navigationDestination(for: PDFModel.self) {
                 switch store.data(for: $0) {
-                case .success(let data): PDFKitView(data: data)
-                case .failure(let error): Text(error.localizedDescription)
+                case .success(let data):
+                    PDFKitView(data: data)
+                        .navigationTitle($0.fileName)
+                        .navigationBarTitleDisplayMode(.inline)
+                case .failure(let error):
+                    Text(error.localizedDescription)
+                }
+            }
+        }
+    }
+}
+
+private struct DocumentSection: View {
+    
+    let group: (key: String, value: [PDFModel])
+    var title: String {
+        if let name = GuideSections[group.key] {
+            return [group.key, name].joined(separator: " - ")
+        } else {
+            return group.key
+        }
+    }
+    var body: some View {
+        Section(header: SectionTitle(text: title)) {
+            ForEach(group.value, id: \.self) { model in
+                NavigationLink(value: model) {
+                    Text(model.fileName)
                 }
             }
         }
