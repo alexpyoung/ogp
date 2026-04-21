@@ -18,13 +18,6 @@
 			remoteGlobalIDString = FAC4B6DC2F887B95002E2245;
 			remoteInfo = ogp;
 		};
-		FAC4B6F92F887B97002E2245 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = FAC4B6D52F887B95002E2245 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = FAC4B6DC2F887B95002E2245;
-			remoteInfo = ogp;
-		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
@@ -32,15 +25,31 @@
 		FAC4B6EE2F887B97002E2245 /* ogpTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ogpTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedRootGroup section */
-		FAC4B6DF2F887B95002E2245 /* ogp */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = ogp;
-			sourceTree = "<group>";
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		FA906B7D2F97DE5700D9E1FB /* Exceptions for "App" folder in "ogp" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Tests/ogpTests.swift,
+			);
+			target = FAC4B6DC2F887B95002E2245 /* ogp */;
 		};
-		FAC4B6F12F887B97002E2245 /* ogpTests */ = {
+		FA906B7E2F97DE5700D9E1FB /* Exceptions for "App" folder in "ogpTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Tests/ogpTests.swift,
+			);
+			target = FAC4B6ED2F887B97002E2245 /* ogpTests */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		FAC4B6DF2F887B95002E2245 /* App */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = ogpTests;
+			exceptions = (
+				FA906B7D2F97DE5700D9E1FB /* Exceptions for "App" folder in "ogp" target */,
+				FA906B7E2F97DE5700D9E1FB /* Exceptions for "App" folder in "ogpTests" target */,
+			);
+			path = App;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -61,21 +70,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		FAC4B6F52F887B97002E2245 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		FAC4B6D42F887B95002E2245 = {
 			isa = PBXGroup;
 			children = (
-				FAC4B6DF2F887B95002E2245 /* ogp */,
-				FAC4B6F12F887B97002E2245 /* ogpTests */,
+				FAC4B6DF2F887B95002E2245 /* App */,
 				FAC4B6DE2F887B95002E2245 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -105,7 +106,7 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				FAC4B6DF2F887B95002E2245 /* ogp */,
+				FAC4B6DF2F887B95002E2245 /* App */,
 			);
 			name = ogp;
 			packageProductDependencies = (
@@ -128,9 +129,6 @@
 			dependencies = (
 				FAC4B6F02F887B97002E2245 /* PBXTargetDependency */,
 			);
-			fileSystemSynchronizedGroups = (
-				FAC4B6F12F887B97002E2245 /* ogpTests */,
-			);
 			name = ogpTests;
 			packageProductDependencies = (
 			);
@@ -152,10 +150,6 @@
 						CreatedOnToolsVersion = 16.2;
 					};
 					FAC4B6ED2F887B97002E2245 = {
-						CreatedOnToolsVersion = 16.2;
-						TestTargetID = FAC4B6DC2F887B95002E2245;
-					};
-					FAC4B6F72F887B97002E2245 = {
 						CreatedOnToolsVersion = 16.2;
 						TestTargetID = FAC4B6DC2F887B95002E2245;
 					};
@@ -199,13 +193,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		FAC4B6F62F887B97002E2245 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -223,13 +210,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		FAC4B6F42F887B97002E2245 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -237,11 +217,6 @@
 			isa = PBXTargetDependency;
 			target = FAC4B6DC2F887B95002E2245 /* ogp */;
 			targetProxy = FAC4B6EF2F887B97002E2245 /* PBXContainerItemProxy */;
-		};
-		FAC4B6FA2F887B97002E2245 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = FAC4B6DC2F887B95002E2245 /* ogp */;
-			targetProxy = FAC4B6F92F887B97002E2245 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -365,7 +340,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = ogp/ogp.entitlements;
+				CODE_SIGN_ENTITLEMENTS = App/ogp.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
@@ -405,7 +380,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = ogp/ogp.entitlements;
+				CODE_SIGN_ENTITLEMENTS = App/ogp.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
