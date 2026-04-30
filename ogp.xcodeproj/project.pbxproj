@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		FA03DB7A2F9C9169006D0E3A /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = FA03DB792F9C9169006D0E3A /* GRDB */; };
 		FA331EBA2F953EB60050DD34 /* SwiftSoup in Frameworks */ = {isa = PBXBuildFile; productRef = FA331EB92F953EB60050DD34 /* SwiftSoup */; };
 /* End PBXBuildFile section */
 
@@ -60,6 +61,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FA331EBA2F953EB60050DD34 /* SwiftSoup in Frameworks */,
+				FA03DB7A2F9C9169006D0E3A /* GRDB in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -73,10 +75,18 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		FA03DB782F9C9169006D0E3A /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		FAC4B6D42F887B95002E2245 = {
 			isa = PBXGroup;
 			children = (
 				FAC4B6DF2F887B95002E2245 /* App */,
+				FA03DB782F9C9169006D0E3A /* Frameworks */,
 				FAC4B6DE2F887B95002E2245 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -111,6 +121,7 @@
 			name = ogp;
 			packageProductDependencies = (
 				FA331EB92F953EB60050DD34 /* SwiftSoup */,
+				FA03DB792F9C9169006D0E3A /* GRDB */,
 			);
 			productName = ogp;
 			productReference = FAC4B6DD2F887B95002E2245 /* ogp.app */;
@@ -166,6 +177,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				FA331EB82F953EB60050DD34 /* XCRemoteSwiftPackageReference "SwiftSoup" */,
+				FA09142B2F9C8CF70011A3CF /* XCRemoteSwiftPackageReference "GRDB" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = FAC4B6DE2F887B95002E2245 /* Products */;
@@ -494,6 +506,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		FA09142B2F9C8CF70011A3CF /* XCRemoteSwiftPackageReference "GRDB" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/groue/GRDB.swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 7.8.0;
+			};
+		};
 		FA331EB82F953EB60050DD34 /* XCRemoteSwiftPackageReference "SwiftSoup" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/scinfu/SwiftSoup";
@@ -505,6 +525,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		FA03DB792F9C9169006D0E3A /* GRDB */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FA09142B2F9C8CF70011A3CF /* XCRemoteSwiftPackageReference "GRDB" */;
+			productName = GRDB;
+		};
 		FA331EB92F953EB60050DD34 /* SwiftSoup */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = FA331EB82F953EB60050DD34 /* XCRemoteSwiftPackageReference "SwiftSoup" */;
