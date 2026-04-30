@@ -7,14 +7,15 @@
 
 import Foundation
 import SwiftData
+import GRDB
 
-@MainActor
 struct PDFStore {
-    
+   
+    private let database: DatabaseManager
     private let baseUrl: URL
     private let context: ModelContext
     
-    init(context: ModelContext) throws {
+    init(context: ModelContext, database: DatabaseManager = .shared) throws {
         self.context = context
         guard let support = FileManager.default.urls(
             for: .applicationSupportDirectory,
@@ -25,47 +26,54 @@ struct PDFStore {
             at: self.baseUrl,
             withIntermediateDirectories: true
         )
+        self.database = database
     }
     
-    func all() throws -> [PDFModel] {
-        return try self.context.fetch(FetchDescriptor())
+    func all() throws -> [Document] {
+        return try self.database.queue.read {
+            return try Document.fetchAll($0)
+        }
     }
     
-    func data(for model: PDFModel) -> Result<Data, Error> {
+    func data(for model: Document) -> Result<Data, Error> {
         do {
-            return .success(try Data(contentsOf: self.url(for: model)))
+            return .success(try Data(contentsOf: self.fileUrl(for: model)))
         } catch {
             return .failure(error)
         }
     }
     
-    func save(data: Data, from remotePath: String) throws -> PDFModel {
+    func save(data: Data, from remotePath: String) throws -> Document {
         let model = try self.model(from: remotePath)
-        try data.write(to: self.url(for: model), options: .atomic)
+        try data.write(to: self.fileUrl(for: model), options: .atomic)
         return model
     }
+
+    func save(tokens: [DocumentToken]) {
+        tokens.forEach(self.context.insert)
+    }
     
-    private func model(from remotePath: String) throws -> PDFModel {
-        let descriptor = FetchDescriptor<PDFModel>(predicate: #Predicate {
-            $0.remotePath == remotePath
-        })
-        if let model = try self.context.fetch(descriptor).first {
-            model.updatedAt = Date()
-            return model
-        } else if let url = URL(string: remotePath) {
-            let model = PDFModel(remotePath: remotePath, fileName: url.lastPathComponent)
-            self.context.insert(model)
-            return model
-        } else {
-            throw URLError(.badURL, userInfo: [
-                NSURLErrorFailingURLErrorKey: remotePath
-            ])
+    private func model(from remotePath: String) throws -> Document {
+        return try self.database.queue.write {
+            guard let url = URL(string: remotePath) else {
+                throw URLError(.badURL, userInfo: [
+                    NSURLErrorFailingURLErrorKey: remotePath
+                ])
+            }
+            let document = Document(
+                remotePath: remotePath,
+                fileName: url.lastPathComponent
+            )
+            try document.insert($0, onConflict: .ignore)
+            return try Document
+                .filter(Document.Columns.remotePath == remotePath)
+                .fetchOne($0)!
         }
     }
     
-    func url(for model: PDFModel) -> URL {
+    func fileUrl(for document: Document) -> URL {
         return self.baseUrl
-            .appendingPathComponent(model.fileName)
+            .appendingPathComponent(document.fileName)
             .standardizedFileURL
     }
 }

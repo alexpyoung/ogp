@@ -6,6 +6,7 @@
 //
 
 import Combine
+import GRDB
 import SwiftData
 import SwiftUI
 import WebKit
@@ -24,11 +25,28 @@ final class ViewModel: ObservableObject {
     
     @Published private(set) var state: AppState = .uninitialized
     let store: PDFStore
+    private let database: DatabaseManager
     let baseURL = URL(string: "https://lmsdocs.fdnycloud.org")
     private var cancellables = Set<AnyCancellable>()
     
-    init(store: PDFStore) {
+    init(database: DatabaseManager = .shared, store: PDFStore) {
+        self.database = database
         self.store = store
+    }
+    
+    // TODO: @Publish this property
+    func documents(for query: String) -> [Document] {
+        return (try? self.database.queue.read {
+            guard query.count > 0 else {
+                return try Document
+                    .order(Document.Columns.fileName.asc)
+                    .fetchAll($0)
+            }
+            return try Document
+                .filter(Document.Columns.fileName.like("%\(query)%"))
+                .order(Document.Columns.fileName.asc)
+                .fetchAll($0)
+        }) ?? []
     }
     
     func didAuthenticate(using cookies: [HTTPCookie]) async {

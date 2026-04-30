@@ -57,7 +57,7 @@ struct ContentView: View {
             }
             .frame(width: .zero, height: .zero)
             TabView {
-                DocumentsListView(store: model.store)
+                DocumentsListView(model: model)
                     .tabItem {
                         Label("Documents", systemImage: "tray.full")
                     }
