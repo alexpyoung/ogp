@@ -11,7 +11,7 @@ import GRDB
 struct DatabaseManager {
     
     private var migrator: DatabaseMigrator = createMigrator()
-    let queue: DatabaseQueue
+    private let queue: DatabaseQueue
     static let shared: Self = try! DatabaseManager()
     
     private init() throws {
@@ -29,5 +29,13 @@ struct DatabaseManager {
     
     func setup() throws {
         try self.migrator.migrate(self.queue)
+    }
+    
+    func read<T: Sendable>(_ value: @Sendable (Database) throws -> T) async throws -> T {
+        return try await self.queue.read(value)
+    }
+    
+    func write<T: Sendable>(_ updates: @Sendable (Database) throws -> T) async throws -> T {
+        return try await self.queue.write(updates)
     }
 }

@@ -15,7 +15,9 @@ struct DocumentsListView: View {
     @State private var search = ""
     @State private var isSharing = false
     var grouped: [(key: String, value: [Document])] {
-        let values = self.model.documents(for: search)
+        let values = [Document]()
+        // FIXME
+//        let values = self.model.documents(for: search)
         return Dictionary(grouping: values) { model in
             String(model.fileName.split(separator: "_").first ?? "")
         }

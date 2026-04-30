@@ -29,8 +29,8 @@ struct PDFStore {
         self.database = database
     }
     
-    func all() throws -> [Document] {
-        return try self.database.queue.read {
+    func all() async throws -> [Document] {
+        return try await self.database.read {
             return try Document.fetchAll($0)
         }
     }
@@ -43,8 +43,8 @@ struct PDFStore {
         }
     }
     
-    func save(data: Data, from remotePath: String) throws -> Document {
-        let model = try self.model(from: remotePath)
+    func save(data: Data, from remotePath: String) async throws -> Document {
+        let model = try await self.model(from: remotePath)
         try data.write(to: self.fileUrl(for: model), options: .atomic)
         return model
     }
@@ -53,8 +53,8 @@ struct PDFStore {
         tokens.forEach(self.context.insert)
     }
     
-    private func model(from remotePath: String) throws -> Document {
-        return try self.database.queue.write {
+    private func model(from remotePath: String) async throws -> Document {
+        return try await self.database.write {
             guard let url = URL(string: remotePath) else {
                 throw URLError(.badURL, userInfo: [
                     NSURLErrorFailingURLErrorKey: remotePath

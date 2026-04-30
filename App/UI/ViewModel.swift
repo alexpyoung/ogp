@@ -35,8 +35,8 @@ final class ViewModel: ObservableObject {
     }
     
     // TODO: @Publish this property
-    func documents(for query: String) -> [Document] {
-        return (try? self.database.queue.read {
+    func documents(for query: String) async -> [Document] {
+        return (try? await self.database.read {
             guard query.count > 0 else {
                 return try Document
                     .order(Document.Columns.fileName.asc)
@@ -69,7 +69,7 @@ final class ViewModel: ObservableObject {
                 .sink { self.state = .crawling($0) }
                 .store(in: &cancellables)
             let results = try await crawler.start(url: start)
-            let existing = Set(try self.store.all().map { $0.remotePath })
+            let existing = Set(try await self.store.all().map { $0.remotePath })
             let targets = results.subtracting(existing).compactMap { URL(string: $0, relativeTo: self.baseURL)}
             try await self.download(pdfs: targets)
         } catch {
@@ -79,7 +79,7 @@ final class ViewModel: ObservableObject {
     
     func sync() async {
         do {
-            let urls = try self.store.all().compactMap { URL(string: $0.remotePath, relativeTo: self.baseURL) }
+            let urls = try await self.store.all().compactMap { URL(string: $0.remotePath, relativeTo: self.baseURL) }
             try await self.download(pdfs: urls)
         } catch {
             self.state = .error(error)
@@ -90,7 +90,7 @@ final class ViewModel: ObservableObject {
         let session = URLSession(cookies: HTTPCookieStorage.shared)
         for (index, url) in pdfs.enumerated() {
             let (data, _) = try await session.data(from: url)
-            let _ = try self.store.save(data: data, from: url.path)
+            let _ = try await self.store.save(data: data, from: url.path)
             self.state = .downloading(Float(index + 1) / Float(pdfs.count))
         }
         self.state = .authenticated
