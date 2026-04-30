@@ -9,6 +9,11 @@ import SwiftUI
 
 @main
 struct ogpApp: App {
+    
+    init() {
+        try! DatabaseManager.shared.setup()
+    }
+    
     var body: some Scene {
         WindowGroup {
             ApplicationView()
