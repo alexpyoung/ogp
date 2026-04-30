@@ -18,7 +18,6 @@ struct ogpApp: App {
         WindowGroup {
             ApplicationView()
         }
-        .modelContainer(for: PDFModel.self)
     }
 }
 
