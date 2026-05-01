@@ -1,5 +1,5 @@
 //
-//  DocumentsListView.swift
+//  DocumentListView.swift
 //  ogp
 //
 //  Created by Alex Young on 4/15/26.
@@ -9,7 +9,7 @@ import GRDBQuery
 import PDFKit
 import SwiftUI
 
-struct DocumentsListView: View {
+struct DocumentListView: View {
     
     @State private var isSharing = false
     @EnvironmentStateObject var model: DocumentListModel

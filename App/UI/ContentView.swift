@@ -57,7 +57,7 @@ struct ContentView: View {
             }
             .frame(width: .zero, height: .zero)
             TabView {
-                DocumentsListView(repo: self.model.repo)
+                DocumentListView(repo: self.model.repo)
                     .tabItem {
                         Label("Documents", systemImage: "tray.full")
                     }
