@@ -25,6 +25,6 @@ private struct ApplicationView: View {
     
     @Environment(\.modelContext) private var context
     var body: some View {
-        ContentView(model: ViewModel(store: try! PDFStore(context: self.context)))
+        ContentView(model: ViewModel(repo: try! DocumentRepository(context: self.context)))
     }
 }

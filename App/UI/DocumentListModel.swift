@@ -16,11 +16,11 @@ final class DocumentListModel: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     @Published private(set) var documents: [Document] = []
     @Published var search: String = ""
-    let store: PDFStore
+    let repo: DocumentRepository
     
-    init(queue: DatabaseQueue = DatabaseManager.shared.queue, store: PDFStore) {
+    init(queue: DatabaseQueue = DatabaseManager.shared.queue, repo: DocumentRepository) {
         self.queue = queue
-        self.store = store
+        self.repo = repo
         
         self.$search
             .debounce(for: .milliseconds(300), scheduler: DispatchQueue.main)

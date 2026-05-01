@@ -1,5 +1,5 @@
 //
-//  PDFStore.swift
+//  DocumentRepository.swift
 //  ogp
 //
 //  Created by Alex Young on 4/14/26.
@@ -9,7 +9,7 @@ import Foundation
 import SwiftData
 import GRDB
 
-struct PDFStore {
+struct DocumentRepository {
    
     private let database: DatabaseManager
     private let baseUrl: URL
@@ -50,7 +50,8 @@ struct PDFStore {
     }
 
     func save(tokens: [DocumentToken]) {
-        tokens.forEach(self.context.insert)
+//        try
+//        tokens.forEach(self.context.insert)
     }
     
     private func model(from remotePath: String) async throws -> Document {

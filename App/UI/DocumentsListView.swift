@@ -20,9 +20,9 @@ struct DocumentsListView: View {
         .sorted { $0.key < $1.key }
     }
     
-    init(store: PDFStore) {
+    init(repo: DocumentRepository) {
         _model = EnvironmentStateObject { _ in
-            DocumentListModel(store: store)
+            DocumentListModel(repo: repo)
         }
     }
     
@@ -36,7 +36,7 @@ struct DocumentsListView: View {
             .searchable(text: $model.search)
             .navigationTitle("Documents")
             .navigationDestination(for: Document.self) { model in
-                switch self.model.store.data(for: model) {
+                switch self.model.repo.data(for: model) {
                 case .success(let data):
                     PDFKitView(data: data)
                         .navigationTitle(model.fileName)
@@ -53,7 +53,7 @@ struct DocumentsListView: View {
                             }
                         }
                         .sheet(isPresented: $isSharing) {
-                            ActivityView(items: [self.model.store.fileUrl(for: model)])
+                            ActivityView(items: [self.model.repo.fileUrl(for: model)])
                         }
                 case .failure(let error):
                     Text(error.localizedDescription)
