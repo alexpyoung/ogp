@@ -5,23 +5,25 @@
 //  Created by Alex Young on 4/15/26.
 //
 
+import GRDBQuery
 import PDFKit
-import SwiftData
 import SwiftUI
 
 struct DocumentsListView: View {
     
-    let model: ViewModel
-    @State private var search = ""
     @State private var isSharing = false
+    @EnvironmentStateObject var model: DocumentListModel
     var grouped: [(key: String, value: [Document])] {
-        let values = [Document]()
-        // FIXME
-//        let values = self.model.documents(for: search)
-        return Dictionary(grouping: values) { model in
-            String(model.fileName.split(separator: "_").first ?? "")
+        return Dictionary(grouping: self.model.documents) {
+            String($0.fileName.split(separator: "_").first ?? "")
         }
         .sorted { $0.key < $1.key }
+    }
+    
+    init(store: PDFStore) {
+        _model = EnvironmentStateObject { _ in
+            DocumentListModel(store: store)
+        }
     }
     
     var body: some View {
@@ -31,7 +33,7 @@ struct DocumentsListView: View {
                     DocumentSection(group: $0)
                 }
             }
-            .searchable(text: $search)
+            .searchable(text: $model.search)
             .navigationTitle("Documents")
             .navigationDestination(for: Document.self) { model in
                 switch self.model.store.data(for: model) {

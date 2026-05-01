@@ -11,7 +11,7 @@ import GRDB
 struct DatabaseManager {
     
     private var migrator: DatabaseMigrator = createMigrator()
-    private let queue: DatabaseQueue
+    private(set) var queue: DatabaseQueue
     static let shared: Self = try! DatabaseManager()
     
     private init() throws {

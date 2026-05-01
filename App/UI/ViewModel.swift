@@ -33,22 +33,7 @@ final class ViewModel: ObservableObject {
         self.database = database
         self.store = store
     }
-    
-    // TODO: @Publish this property
-    func documents(for query: String) async -> [Document] {
-        return (try? await self.database.read {
-            guard query.count > 0 else {
-                return try Document
-                    .order(Document.Columns.fileName.asc)
-                    .fetchAll($0)
-            }
-            return try Document
-                .filter(Document.Columns.fileName.like("%\(query)%"))
-                .order(Document.Columns.fileName.asc)
-                .fetchAll($0)
-        }) ?? []
-    }
-    
+
     func didAuthenticate(using cookies: [HTTPCookie]) async {
         cookies.forEach(HTTPCookieStorage.shared.setCookie)
         self.state = .authenticated
