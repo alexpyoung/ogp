@@ -34,5 +34,12 @@ func createMigrator() -> DatabaseMigrator {
                 .references("document", column: "id", onDelete: .cascade)
         }
     }
+    migrator.registerMigration("createTokenFTS") { db in
+        try db.create(virtualTable: "documentTokenFTS", using: FTS5()) { t in
+            t.column("text")
+            t.column("tokenId")
+            t.tokenizer = FTS5TokenizerDescriptor(components: ["unicode61", "remove_diacritics", "2"])
+        }
+    }
     return migrator
 }

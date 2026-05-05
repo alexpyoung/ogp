@@ -49,9 +49,18 @@ struct DocumentRepository {
         return model
     }
 
-    func save(tokens: [DocumentToken]) {
-//        try
-//        tokens.forEach(self.context.insert)
+    func save(tokens: [DocumentToken]) async throws {
+        try await self.database.write { db in
+            for token in tokens {
+                try token.insert(db)
+                try db.execute(
+                    sql: """
+                        INSERT INTO documentTokenFTS (text, tokenId)
+                        VALUES (?, ?)
+                    """, arguments: [token.text, token.id]
+                )
+            }
+        }
     }
     
     private func model(from remotePath: String) async throws -> Document {
