@@ -24,7 +24,14 @@ struct DatabaseManager {
             at: parent,
             withIntermediateDirectories: true
         )
-        self.queue = try DatabaseQueue(path: url.absoluteString)
+        var config = Configuration()
+        config.prepareDatabase {
+            try $0.execute(sql: "PRAGMA foreign_keys = ON")
+        }
+        self.queue = try DatabaseQueue(
+            path: url.absoluteString,
+            configuration: config
+        )
     }
     
     func setup() throws {
