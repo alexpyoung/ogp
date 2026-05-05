@@ -38,6 +38,9 @@ struct ContentView: View {
                 Button("Refresh PDFs") {
                     Task { await self.model.sync() }
                 }
+                Button("Index PDFs") {
+                    Task { await self.model.index() }
+                }
                 Button(authenticationText) {
                     self.isAuthenticating = true
                 }
@@ -74,6 +77,14 @@ struct ContentView: View {
             case .unauthenticated:
                 scrim
                 Button("Login") { isAuthenticating = true }
+            case .indexing(let progress):
+                scrim
+                VStack(alignment: .center, spacing: 16) {
+                    Text("Indexing PDFs")
+                    ProgressView(value: progress)
+                        .progressViewStyle(LinearProgressViewStyle())
+                    
+                }.modifier(ListCardStyle())
             case .crawling(let progress):
                 scrim
                 VStack(alignment: .center, spacing: 16) {

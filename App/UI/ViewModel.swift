@@ -14,6 +14,7 @@ import WebKit
 enum AppState {
     case uninitialized
     case unauthenticated
+    case indexing(Float)
     case crawling(Float)
     case downloading(Float)
     case authenticated
@@ -27,11 +28,13 @@ final class ViewModel: ObservableObject {
     let repo: DocumentRepository
     private let database: DatabaseManager
     let baseURL = URL(string: "https://lmsdocs.fdnycloud.org/")
+    private let tokenizer: PDFTokenizer
     private var cancellables = Set<AnyCancellable>()
     
     init(database: DatabaseManager = .shared, repo: DocumentRepository) {
         self.database = database
         self.repo = repo
+        self.tokenizer = PDFTokenizer(repo: repo)
     }
 
     func didAuthenticate(using cookies: [HTTPCookie]) async {
@@ -69,6 +72,25 @@ final class ViewModel: ObservableObject {
         } catch {
             self.state = .error(error)
         }
+    }
+    
+    func index() async {
+        do {
+            self.state = .indexing(0)
+            let documents = try await self.repo.all()
+            for (index, document) in documents.enumerated() {
+                try await self.index(document: document)
+                self.state = .indexing(Float(index) / Float(documents.count))
+            }
+            self.state = .authenticated
+        } catch {
+            self.state = .error(error)
+        }
+    }
+    
+    private func index(document: Document) async throws {
+        let tokens = self.tokenizer.tokenize(document: document)
+        try await self.repo.save(tokens: tokens)
     }
     
     private func download(pdfs: [URL]) async throws {
