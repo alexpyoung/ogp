@@ -19,14 +19,16 @@ struct AuthenticationView {
     let onComplete: (Result) async -> Void
     
     func makeCoordinator() -> Coordinator {
-        return Coordinator(onComplete: onComplete)
+        return Coordinator(base: url, onComplete: onComplete)
     }
     
     final class Coordinator: NSObject, WKNavigationDelegate {
         
+        let url: URL?
         let onComplete: (Result) async -> Void
 
-        init(onComplete: @escaping (Result) async -> Void) {
+        init(base url: URL?, onComplete: @escaping (Result) async -> Void) {
+            self.url = url
             self.onComplete = onComplete
         }
 
@@ -37,7 +39,8 @@ struct AuthenticationView {
                 case "/dcu/web":
                     let cookies = await view.cookies()
                     await self.onComplete(.authenticated(cookies))
-                case "/dcu/web/user/login":
+                case "/dcu/web/user/login",
+                    self.url?.path:
                     await self.onComplete(.unauthenticated)
                 default: return
                 }

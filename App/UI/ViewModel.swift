@@ -26,7 +26,7 @@ final class ViewModel: ObservableObject {
     @Published private(set) var state: AppState = .uninitialized
     let repo: DocumentRepository
     private let database: DatabaseManager
-    let baseURL = URL(string: "https://lmsdocs.fdnycloud.org")
+    let baseURL = URL(string: "https://lmsdocs.fdnycloud.org/")
     private var cancellables = Set<AnyCancellable>()
     
     init(database: DatabaseManager = .shared, repo: DocumentRepository) {
