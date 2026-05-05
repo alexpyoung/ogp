@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		FA03DB7A2F9C9169006D0E3A /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = FA03DB792F9C9169006D0E3A /* GRDB */; };
 		FA331EBA2F953EB60050DD34 /* SwiftSoup in Frameworks */ = {isa = PBXBuildFile; productRef = FA331EB92F953EB60050DD34 /* SwiftSoup */; };
+		FA8A1DBA2FA424F50012189C /* GRDBQuery in Frameworks */ = {isa = PBXBuildFile; productRef = FA8A1DB92FA424F50012189C /* GRDBQuery */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -62,6 +63,7 @@
 			files = (
 				FA331EBA2F953EB60050DD34 /* SwiftSoup in Frameworks */,
 				FA03DB7A2F9C9169006D0E3A /* GRDB in Frameworks */,
+				FA8A1DBA2FA424F50012189C /* GRDBQuery in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -122,6 +124,7 @@
 			packageProductDependencies = (
 				FA331EB92F953EB60050DD34 /* SwiftSoup */,
 				FA03DB792F9C9169006D0E3A /* GRDB */,
+				FA8A1DB92FA424F50012189C /* GRDBQuery */,
 			);
 			productName = ogp;
 			productReference = FAC4B6DD2F887B95002E2245 /* ogp.app */;
@@ -178,6 +181,7 @@
 			packageReferences = (
 				FA331EB82F953EB60050DD34 /* XCRemoteSwiftPackageReference "SwiftSoup" */,
 				FA09142B2F9C8CF70011A3CF /* XCRemoteSwiftPackageReference "GRDB" */,
+				FA8A1DB82FA424F50012189C /* XCRemoteSwiftPackageReference "GRDBQuery" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = FAC4B6DE2F887B95002E2245 /* Products */;
@@ -522,6 +526,14 @@
 				minimumVersion = 2.13.4;
 			};
 		};
+		FA8A1DB82FA424F50012189C /* XCRemoteSwiftPackageReference "GRDBQuery" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/groue/GRDBQuery";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.11.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -534,6 +546,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = FA331EB82F953EB60050DD34 /* XCRemoteSwiftPackageReference "SwiftSoup" */;
 			productName = SwiftSoup;
+		};
+		FA8A1DB92FA424F50012189C /* GRDBQuery */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FA8A1DB82FA424F50012189C /* XCRemoteSwiftPackageReference "GRDBQuery" */;
+			productName = GRDBQuery;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
