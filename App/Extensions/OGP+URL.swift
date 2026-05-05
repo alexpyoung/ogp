@@ -19,4 +19,12 @@ extension URL {
     func normalize() -> Self? {
         return self.clean()?.absoluteURL.standardized
     }
+    
+    func data() -> Result<Data, Error> {
+        do {
+            return .success(try Data(contentsOf: self))
+        } catch {
+            return .failure(error)
+        }
+    }
 }

@@ -19,6 +19,7 @@ struct DocumentListView: View {
         }
         .sorted { $0.key < $1.key }
     }
+    @State private var results: [(key: String, value: [TokenSearchResult])] = []
     
     init(repo: DocumentRepository) {
         _model = EnvironmentStateObject { _ in
@@ -29,36 +30,73 @@ struct DocumentListView: View {
     var body: some View {
         NavigationStack {
             List {
-                ForEach(grouped, id: \.key) {
-                    DocumentSection(group: $0)
+                if results.count > 0 {
+                    ForEach(results, id: \.key) {
+                        ResultSection(group: $0)
+                    }
+                } else {
+                    ForEach(grouped, id: \.key) {
+                        DocumentSection(group: $0)
+                    }
                 }
             }
             .searchable(text: $model.search)
-            .navigationTitle("Documents")
-            .navigationDestination(for: Document.self) { model in
-                switch self.model.repo.data(for: model) {
-                case .success(let data):
-                    PDFKitView(data: data)
-                        .navigationTitle(model.fileName)
-                        #if os(iOS)
-                        .navigationBarTitleDisplayMode(.inline)
-                        #endif
-                        .toolbar {
-                            ToolbarItem(placement: .primaryAction) {
-                                Button {
-                                    isSharing = true
-                                } label: {
-                                    Image(systemName: "square.and.arrow.up")
-                                }
-                            }
-                        }
-                        .sheet(isPresented: $isSharing) {
-                            ActivityView(items: [self.model.repo.fileUrl(for: model)])
-                        }
-                case .failure(let error):
-                    Text(error.localizedDescription)
+            .onChange(of: model.search) {
+                Task {
+                    let tokens = try await self.model.repo.search(query: model.search)
+                    self.results = Dictionary(grouping: tokens) { $0.fileName }
+                        .sorted { $0.key < $1.key }
                 }
+                
             }
+            .navigationTitle("Documents")
+            .navigationDestination(for: TokenSearchResult.self) { record in
+                let url = self.model.repo.fileUrl(for: record)
+                PDFDestination(
+                    title: record.fileName,
+                    url: url,
+                    isSharing: $isSharing
+                )
+            }
+            .navigationDestination(for: Document.self) { record in
+                let url = self.model.repo.fileUrl(for: record)
+                PDFDestination(
+                    title: record.fileName,
+                    url: url,
+                    isSharing: $isSharing
+                )
+            }
+        }
+    }
+}
+
+private struct PDFDestination: View {
+    
+    let title: String
+    let url: URL
+    @Binding var isSharing: Bool
+    var body: some View {
+        switch self.url.data() {
+        case .success(let data):
+            PDFKitView(data: data)
+                .navigationTitle(self.title)
+                #if os(iOS)
+                .navigationBarTitleDisplayMode(.inline)
+                #endif
+                .toolbar {
+                    ToolbarItem(placement: .primaryAction) {
+                        Button {
+                            isSharing = true
+                        } label: {
+                            Image(systemName: "square.and.arrow.up")
+                        }
+                    }
+                }
+                .sheet(isPresented: $isSharing) {
+                    ActivityView(items: [self.url])
+                }
+        case .failure(let error):
+            Text(error.localizedDescription)
         }
     }
 }
@@ -78,6 +116,20 @@ private struct DocumentSection: View {
             ForEach(group.value, id: \.self) { model in
                 NavigationLink(value: model) {
                     Text(model.fileName)
+                }
+            }
+        }
+    }
+}
+
+private struct ResultSection: View {
+    
+    let group: (key: String, value: [TokenSearchResult])
+    var body: some View {
+        Section(header: Text(group.key)) {
+            ForEach(group.value, id: \.self) { model in
+                NavigationLink(value: model) {
+                    Text(model.text)
                 }
             }
         }

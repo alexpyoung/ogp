@@ -40,14 +40,6 @@ struct DocumentRepository {
         }
     }
     
-    func data(for model: Document) -> Result<Data, Error> {
-        do {
-            return .success(try Data(contentsOf: self.fileUrl(for: model)))
-        } catch {
-            return .failure(error)
-        }
-    }
-    
     func save(data: Data, from remotePath: String) async throws -> Document {
         let model = try await self.model(from: remotePath)
         try data.write(to: self.fileUrl(for: model), options: .atomic)
@@ -103,9 +95,9 @@ struct DocumentRepository {
         }
     }
     
-    func fileUrl(for document: Document) -> URL {
+    func fileUrl(for reference: any FileReference) -> URL {
         return self.baseUrl
-            .appendingPathComponent(document.fileName)
+            .appendingPathComponent(reference.fileName)
             .standardizedFileURL
     }
 }
