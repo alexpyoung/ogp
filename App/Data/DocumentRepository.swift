@@ -9,6 +9,11 @@ import Foundation
 import SwiftData
 import GRDB
 
+protocol FileReference {
+    
+    var fileName: String { get }
+}
+
 struct DocumentRepository {
    
     private let database: DatabaseManager
@@ -60,6 +65,23 @@ struct DocumentRepository {
                     """, arguments: [token.text, token.id]
                 )
             }
+        }
+    }
+    
+    func search(query: String) async throws -> [TokenSearchResult] {
+        try await self.database.read {
+            try TokenSearchResult.fetchAll($0, sql: """
+                SELECT
+                    t.id AS tokenId,
+                    t.text AS text,
+                    d.fileName AS documentFileName,
+                    bm25(documentTokenFTS) AS score
+                FROM documentTokenFTS f
+                JOIN documentToken t ON t.id = f.tokenId
+                JOIN document d ON d.id = t.documentId
+                WHERE documentTokenFTS MATCH ?
+                ORDER BY score
+            """, arguments: [query])
         }
     }
     
