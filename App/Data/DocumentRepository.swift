@@ -40,6 +40,12 @@ struct DocumentRepository {
         }
     }
     
+    func deleteAll<T: TableRecord>(of type: T.Type) async throws -> Int {
+        return try await self.database.write {
+            return try T.deleteAll($0)
+        }
+    }
+    
     func save(data: Data, from remotePath: String) async throws -> Document {
         let model = try await self.model(from: remotePath)
         try data.write(to: self.fileUrl(for: model), options: .atomic)

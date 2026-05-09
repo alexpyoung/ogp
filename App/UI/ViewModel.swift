@@ -77,6 +77,7 @@ final class ViewModel: ObservableObject {
     func index() async {
         do {
             self.state = .indexing(0)
+            _ = try await self.repo.deleteAll(of: DocumentToken.self)
             let documents = try await self.repo.all()
             for (index, document) in documents.enumerated() {
                 try await self.index(document: document)
@@ -97,7 +98,7 @@ final class ViewModel: ObservableObject {
         let session = URLSession(cookies: HTTPCookieStorage.shared)
         for (index, url) in pdfs.enumerated() {
             let (data, _) = try await session.data(from: url)
-            let _ = try await self.repo.save(data: data, from: url.path)
+            _ = try await self.repo.save(data: data, from: url.path)
             self.state = .downloading(Float(index + 1) / Float(pdfs.count))
         }
         self.state = .authenticated
