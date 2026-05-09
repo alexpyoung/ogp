@@ -18,10 +18,6 @@ struct AuthenticationView {
     let url: URL?
     let onComplete: (Result) async -> Void
     
-    func makeCoordinator() -> Coordinator {
-        return Coordinator(base: url, onComplete: onComplete)
-    }
-    
     final class Coordinator: NSObject, WKNavigationDelegate {
         
         let url: URL?
@@ -62,6 +58,10 @@ extension AuthenticationView: UIViewRepresentable {
     }
 
     func updateUIView(_ webView: WKWebView, context: Context) {}
+    
+    func makeCoordinator() -> Coordinator {
+        return Coordinator(base: url, onComplete: onComplete)
+    }
 }
 #elseif os(macOS)
 extension AuthenticationView: NSViewRepresentable {
