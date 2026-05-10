@@ -55,6 +55,7 @@ struct DocumentListView: View {
                 PDFDestination(
                     title: record.fileName,
                     url: url,
+                    search: model.search,
                     isSharing: $isSharing
                 )
             }
@@ -74,11 +75,12 @@ private struct PDFDestination: View {
     
     let title: String
     let url: URL
+    var search: String? = nil
     @Binding var isSharing: Bool
     var body: some View {
         switch self.url.data() {
         case .success(let data):
-            PDFKitView(data: data)
+            PDFSearchView(data: data, search: search ?? "")
                 .navigationTitle(self.title)
                 #if os(iOS)
                 .navigationBarTitleDisplayMode(.inline)

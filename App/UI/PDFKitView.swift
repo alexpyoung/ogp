@@ -10,12 +10,9 @@ import PDFKit
 
 struct PDFKitView {
     
-    private let document: PDFDocument
-    
-    init?(data: Data) {
-        guard let document = PDFDocument(data: data) else { return nil }
-        self.document = document
-    }
+    let document: PDFDocument
+    @Binding var matches: [PDFSelection]
+    @Binding var currentIndex: Int
 }
 
 #if os(iOS)
@@ -30,7 +27,48 @@ extension PDFKitView: UIViewRepresentable {
         return view
     }
 
-    func updateUIView(_ uiView: PDFView, context: Context) {}
+    func updateUIView(_ view: PDFView, context: Context) {
+        if matches.indices.contains(currentIndex) {
+            let selection = matches[currentIndex]
+            context.coordinator.highlight(selection: selection)
+            view.setCurrentSelection(selection, animate: true)
+            view.go(to: selection)
+        } else if matches.isEmpty {
+            context.coordinator.clear()
+        }
+    }
+    
+    final class Coordinator {
+        
+        private var current: (PDFPage, PDFAnnotation)?
+        
+        func highlight(selection: PDFSelection) {
+            self.clear()
+            guard let line = selection.selectionsByLine().first,
+                  let page = line.pages.first
+            else { return }
+            let annotation = PDFAnnotation(
+                bounds: line.bounds(for: page),
+                forType: .square,
+                withProperties: nil
+            )
+            let color = UIColor.systemYellow.withAlphaComponent(0.4)
+            annotation.color = color
+            annotation.interiorColor = color
+            page.addAnnotation(annotation)
+            self.current = (page, annotation)
+        }
+        
+        func clear() {
+            if let (page, annotation) = self.current {
+                page.removeAnnotation(annotation)
+            }
+        }
+    }
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator()
+    }
 }
 #elseif os(macOS)
 extension PDFKitView: NSViewRepresentable {
