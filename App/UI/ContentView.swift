@@ -120,6 +120,7 @@ struct ContentView: View {
                     self.isAuthenticating = false
                     await self.model.didAuthenticate(using: cookies)
                     await self.model.crawl()
+                    await self.model.index()
                 }
             }
             #if os(macOS)
