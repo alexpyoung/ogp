@@ -43,9 +43,13 @@ struct DocumentListView: View {
             .searchable(text: $model.search)
             .onChange(of: model.search) {
                 Task {
-                    let tokens = try await self.model.repo.search(query: model.search)
-                    self.results = Dictionary(grouping: tokens) { $0.fileName }
-                        .sorted { $0.key < $1.key }
+                    if model.search.count > 0 {
+                        let tokens = try await self.model.repo.search(query: model.search)
+                        self.results = Dictionary(grouping: tokens) { $0.fileName }
+                            .sorted { $0.key < $1.key }
+                    } else {
+                        self.results = []
+                    }
                 }
                 
             }
