@@ -12,8 +12,17 @@ struct PDFSearchView: View {
     
     @State private var rawQuery: String
     @State private var debouncedQuery: String
+    @State private var selection: PDFSelection?
     @State private var matches: [PDFSelection] = []
-    @State private var currentIndex: Int = 0
+    @State private var currentIndex: Int = 0 {
+        didSet {
+            if matches.indices.contains(currentIndex) {
+                selection = matches[currentIndex]
+            } else {
+                selection = nil
+            }
+        }
+    }
     private let document: PDFDocument
     
     init?(data: Data, search: String = "") {
@@ -57,13 +66,13 @@ struct PDFSearchView: View {
             Divider()
             PDFDocumentView(
                 document: document,
-                matches: $matches,
-                currentIndex: $currentIndex
+                selection: $selection
             )
         }
         .task(id: rawQuery) {
             try? await Task.sleep(nanoseconds: 300_000_000) // 300ms
             debouncedQuery = rawQuery
+            currentIndex = 0
             matches = document.findString(debouncedQuery, withOptions: .caseInsensitive)
         }
     }

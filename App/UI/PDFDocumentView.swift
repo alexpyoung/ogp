@@ -11,8 +11,7 @@ import PDFKit
 struct PDFDocumentView {
     
     let document: PDFDocument
-    @Binding var matches: [PDFSelection]
-    @Binding var currentIndex: Int
+    @Binding var selection: PDFSelection?
 }
 
 #if os(iOS)
@@ -28,12 +27,11 @@ extension PDFDocumentView: UIViewRepresentable {
     }
 
     func updateUIView(_ view: PDFView, context: Context) {
-        if matches.indices.contains(currentIndex) {
-            let selection = matches[currentIndex]
+        if let selection = self.selection {
             context.coordinator.highlight(selection: selection)
             view.setCurrentSelection(selection, animate: true)
             view.go(to: selection)
-        } else if matches.isEmpty {
+        } else {
             context.coordinator.clear()
         }
     }
