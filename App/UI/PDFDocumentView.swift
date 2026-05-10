@@ -1,5 +1,5 @@
 //
-//  PDFKitView.swift
+//  PDFDocumentView.swift
 //  ogp
 //
 //  Created by Alex Young on 4/14/26.
@@ -8,7 +8,7 @@
 import SwiftUI
 import PDFKit
 
-struct PDFKitView {
+struct PDFDocumentView {
     
     let document: PDFDocument
     @Binding var matches: [PDFSelection]
@@ -16,7 +16,7 @@ struct PDFKitView {
 }
 
 #if os(iOS)
-extension PDFKitView: UIViewRepresentable {
+extension PDFDocumentView: UIViewRepresentable {
 
     func makeUIView(context: Context) -> PDFView {
         let view = PDFView()

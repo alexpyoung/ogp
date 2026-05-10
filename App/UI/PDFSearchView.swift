@@ -55,7 +55,7 @@ struct PDFSearchView: View {
             .padding(.bottom, 12)
             .padding(.horizontal, 16)
             Divider()
-            PDFKitView(
+            PDFDocumentView(
                 document: document,
                 matches: $matches,
                 currentIndex: $currentIndex
