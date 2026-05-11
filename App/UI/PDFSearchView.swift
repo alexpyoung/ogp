@@ -32,6 +32,7 @@ struct PDFSearchView: View {
         self.rawQuery = search
         self.debouncedQuery = search
         self.document = document
+        self.match()
     }
     private var iterator: some View {
         Group {
@@ -69,22 +70,39 @@ struct PDFSearchView: View {
                 selection: $selection
             )
         }
-        .task(id: rawQuery) {
-            try? await Task.sleep(nanoseconds: 300_000_000) // 300ms
+        .debounced(id: rawQuery, interval: 0.3) {
             debouncedQuery = rawQuery
-            currentIndex = 0
-            matches = document.findString(debouncedQuery, withOptions: .caseInsensitive)
+            match()
         }
     }
     
+    private func match() {
+        matches = document.findString(debouncedQuery, withOptions: .caseInsensitive)
+        currentIndex = 0
+    }
     private func next() {
         guard !matches.isEmpty else { return }
         currentIndex = (currentIndex + 1) % matches.count
     }
-    
     private func previous() {
         guard !matches.isEmpty else { return }
         currentIndex = (currentIndex - 1 + matches.count) % matches.count
+    }
+}
+
+private extension View {
+    
+    func debounced<T>(
+        id value: T,
+        priority: TaskPriority = .userInitiated,
+        interval: TimeInterval,
+        _ action: @escaping @Sendable () async -> Void
+    ) -> some View where T : Equatable {
+        return self.task(id: value, priority: priority) {
+            let ns = UInt64(interval * 1000000000)
+            try? await Task.sleep(nanoseconds: ns)
+            await action()
+        }
     }
 }
 
