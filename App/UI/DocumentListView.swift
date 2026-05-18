@@ -23,13 +23,21 @@ struct DocumentListView: View {
                         ResultSection(group: $0)
                     }
                 } else {
-                    ForEach(model.grouped, id: \.key) {
-                        DocumentSection(group: $0)
+                    ForEach(model.grouped, id: \.section) { group in
+                        NavigationLink(value: group) {
+                            Text([
+                                group.section,
+                                GuideSections[group.section]
+                            ].compactMap { $0 }.joined(separator: ". "))
+                        }
                     }
                 }
             }
             .searchable(text: $model.search)
-            .navigationTitle("Documents")
+            .navigationTitle("OGP")
+            .navigationDestination(for: DocumentGroup.self) { group in
+                DocumentSection(group: group)
+            }
             .navigationDestination(for: TokenSearchResult.self) { record in
                 let url = self.model.repo.fileUrl(for: record)
                 PDFDestination(
@@ -85,22 +93,17 @@ private struct PDFDestination: View {
 
 private struct DocumentSection: View {
     
-    let group: (key: String, value: [AnnotatedDocument])
-    var title: String {
-        if let name = GuideSections[group.key] {
-            return [group.key, name].joined(separator: " - ")
-        } else {
-            return group.key
-        }
-    }
+    let group: DocumentGroup
     var body: some View {
-        Section(header: SectionTitle(text: title)) {
-            ForEach(group.value, id: \.self) { model in
+        List {
+            ForEach(group.documents, id: \.self) { model in
                 NavigationLink(value: model.document) {
                     DocumentItem(document: model)
                 }
             }
         }
+        .navigationTitle(GuideSections[group.section] ?? group.section)
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 

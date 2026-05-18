@@ -9,6 +9,12 @@ import SwiftUI
 import GRDB
 import Combine
 
+struct DocumentGroup: Hashable {
+    
+    let section: String
+    let documents: [AnnotatedDocument]
+}
+
 @MainActor
 final class DocumentListModel: ObservableObject {
     
@@ -18,11 +24,12 @@ final class DocumentListModel: ObservableObject {
     @Published var search: String = ""
     @Published var results: [(key: String, value: [TokenSearchResult])] = []
     let repo: DocumentRepository
-    var grouped: [(key: String, value: [AnnotatedDocument])] {
+    var grouped: [DocumentGroup] {
         return Dictionary(grouping: self.documents) {
             String($0.document.fileName.split(separator: "_").first ?? "")
         }
-        .sorted { $0.key < $1.key }
+        .map { DocumentGroup(section: $0.key, documents: $0.value)}
+        .sorted { $0.section < $1.section }
     }
     
     init(queue: DatabaseQueue = DatabaseManager.shared.queue, repo: DocumentRepository) {
