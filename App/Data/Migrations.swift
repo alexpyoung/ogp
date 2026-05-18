@@ -29,6 +29,7 @@ func createMigrator() -> DatabaseMigrator {
             t.column("createdAt", .datetime).notNull()
             t.column("text", .text).notNull()
             t.column("pageIndex", .integer).notNull()
+            t.column("location", .integer).notNull()
             t.column("bounds", .text).notNull()
             t.column("documentId", .text).notNull().indexed()
                 .references("document", column: "id", onDelete: .cascade)

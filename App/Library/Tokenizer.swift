@@ -31,10 +31,11 @@ struct PDFTokenizer {
                         text.count > 0
                     else { return }
                     results.append(DocumentToken(
-                        doc: model,
+                        text: text,
                         pageIndex: index,
+                        location: range.location,
                         bounds: line.bounds(for: page),
-                        text: text
+                        documentId: model.id
                     ))
                 }
             }

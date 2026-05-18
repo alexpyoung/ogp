@@ -10,12 +10,13 @@ import GRDB
 
 struct DocumentToken: Codable, Identifiable, Hashable, FetchableRecord, PersistableRecord {
     
-    let id: String
+    private(set) var id: String = UUID().uuidString
     let text: String
     let pageIndex: Int
+    let location: Int
     let bounds: CGRect
     let documentId: String
-    let createdAt: Date
+    private(set) var createdAt = Date()
    
     enum Columns {
         static let id = Column(CodingKeys.id)
@@ -24,15 +25,5 @@ struct DocumentToken: Codable, Identifiable, Hashable, FetchableRecord, Persista
         static let bounds = Column(CodingKeys.bounds)
         static let documentId = Column(CodingKeys.documentId)
         static let createdAt = Column(CodingKeys.createdAt)
-    }
-    
-    init(doc: Document, pageIndex: Int, bounds: CGRect, text: String)
-    {
-        self.id = UUID().uuidString
-        self.text = text
-        self.pageIndex = pageIndex
-        self.bounds = bounds
-        self.documentId = doc.id
-        self.createdAt = Date()
     }
 }
