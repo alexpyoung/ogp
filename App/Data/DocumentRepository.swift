@@ -51,6 +51,12 @@ struct DocumentRepository {
         try data.write(to: self.fileUrl(for: model), options: .atomic)
         return model
     }
+    
+    func save(metadata: DocumentMetadata) async throws {
+        try await self.database.write {
+            try metadata.insert($0)
+        }
+    }
 
     func save(tokens: [DocumentToken]) async throws {
         try await self.database.write { db in

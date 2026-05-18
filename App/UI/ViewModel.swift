@@ -92,6 +92,9 @@ final class ViewModel: ObservableObject {
     private func index(document: Document) async throws {
         let tokens = self.tokenizer.tokenize(document: document)
         try await self.repo.save(tokens: tokens)
+        if let metadata = MetadataGenerator.generate(id: document.id, tokens: tokens) {
+            try await self.repo.save(metadata: metadata)
+        }
     }
     
     private func download(pdfs: [URL]) async throws {
