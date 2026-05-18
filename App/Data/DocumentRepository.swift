@@ -18,10 +18,8 @@ struct DocumentRepository {
    
     private let database: DatabaseManager
     private let baseUrl: URL
-    private let context: ModelContext
     
-    init(context: ModelContext, database: DatabaseManager = .shared) throws {
-        self.context = context
+    init(database: DatabaseManager = .shared) throws {
         guard let support = FileManager.default.urls(
             for: .applicationSupportDirectory,
             in: .userDomainMask
