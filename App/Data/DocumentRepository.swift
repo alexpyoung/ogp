@@ -34,9 +34,41 @@ struct DocumentRepository {
         self.database = database
     }
     
-    func all() async throws -> [Document] {
+    func annotatedDocuments() async throws -> [AnnotatedDocument] {
         return try await self.database.read {
-            return try Document.fetchAll($0)
+            return try Document
+                .including(optional: Document.metadata.forKey("metadata"))
+                .asRequest(of: AnnotatedDocument.self)
+                .fetchAll($0)
+                .sorted { (a, b) in
+                    if a.metadata?.section == b.metadata?.section {
+                        switch (a.metadata?.subsection, b.metadata?.subsection) {
+                        case (_, nil):
+                            return false
+                        case (nil, .some):
+                            return true
+                        case (.some(let amd), .some(let bmd)):
+                            return amd < bmd
+                        }
+                    } else {
+                        switch (a.metadata?.section, b.metadata?.section) {
+                        case (nil, _):
+                            return false
+                        case (.some, nil):
+                            return true
+                        case (.some(let amd), .some(let bmd)):
+                            return amd < bmd
+                        }
+                    }
+                }
+        }
+    }
+    
+    func documents() async throws -> [Document] {
+        return try await self.database.read {
+            return try Document
+                .order(Document.Columns.fileName.asc)
+                .fetchAll($0)
         }
     }
     
@@ -71,7 +103,7 @@ struct DocumentRepository {
             }
         }
     }
-    
+
     func search(query: String) async throws -> [TokenSearchResult] {
         try await self.database.read {
             try TokenSearchResult.fetchAll($0, sql: """

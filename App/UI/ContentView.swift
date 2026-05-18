@@ -13,13 +13,6 @@ struct ContentView: View {
     @StateObject var model: ViewModel
     @State private var isAuthenticating = false
     @State private var error: Error?
-    private var authenticationUrl: URL? {
-        if case .unauthenticated = self.model.state {
-            self.model.baseURL
-        } else {
-            URL(string: "/dcu/web/user/logout", relativeTo: self.model.baseURL)
-        }
-    }
     private var authenticationText: String {
         if case .unauthenticated = self.model.state {
             "Login"
@@ -113,7 +106,7 @@ struct ContentView: View {
             }
         }
         .sheet(isPresented: $isAuthenticating) {
-            AuthenticationView(url: authenticationUrl) {
+            AuthenticationView(url: self.model.authenticationURL) {
                 switch $0 {
                 case .unauthenticated: return
                 case .authenticated(let cookies):

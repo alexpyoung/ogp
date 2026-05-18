@@ -36,3 +36,11 @@ struct Document: Codable, Identifiable, Hashable, FetchableRecord, PersistableRe
         self.updatedAt = Date()
     }
 }
+
+extension Document: TableRecord {
+
+    static let metadata = hasOne(
+        DocumentMetadata.self,
+        using: ForeignKey(["documentId"])
+    )
+}

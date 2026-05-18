@@ -28,6 +28,13 @@ final class ViewModel: ObservableObject {
     let repo: DocumentRepository
     private let database: DatabaseManager
     let baseURL = URL(string: "https://lmsdocs.fdnycloud.org/")
+    var authenticationURL: URL? {
+        if case .unauthenticated = self.state {
+            self.baseURL
+        } else {
+            URL(string: "/dcu/web/user/logout", relativeTo: self.baseURL)
+        }
+    }
     private let tokenizer: PDFTokenizer
     private var cancellables = Set<AnyCancellable>()
     
@@ -57,7 +64,7 @@ final class ViewModel: ObservableObject {
                 .sink { self.state = .crawling($0) }
                 .store(in: &cancellables)
             let results = try await crawler.start(url: start)
-            let existing = Set(try await self.repo.all().map { $0.remotePath })
+            let existing = Set(try await self.repo.documents().map { $0.remotePath })
             let targets = results.subtracting(existing).compactMap { URL(string: $0, relativeTo: self.baseURL)}
             try await self.download(pdfs: targets)
         } catch {
@@ -67,7 +74,7 @@ final class ViewModel: ObservableObject {
     
     func sync() async {
         do {
-            let urls = try await self.repo.all().compactMap { URL(string: $0.remotePath, relativeTo: self.baseURL) }
+            let urls = try await self.repo.documents().compactMap { URL(string: $0.remotePath, relativeTo: self.baseURL) }
             try await self.download(pdfs: urls)
         } catch {
             self.state = .error(error)
@@ -77,11 +84,14 @@ final class ViewModel: ObservableObject {
     func index() async {
         do {
             self.state = .indexing(0)
+            // TODO: Delete FTS records
             _ = try await self.repo.deleteAll(of: DocumentToken.self)
-            let documents = try await self.repo.all()
+            _ = try await self.repo.deleteAll(of: DocumentMetadata.self)
+            let documents = try await self.repo.documents()
+            let total = Float(documents.count)
             for (index, document) in documents.enumerated() {
                 try await self.index(document: document)
-                self.state = .indexing(Float(index) / Float(documents.count))
+                self.state = .indexing(Float(index) / total)
             }
             self.state = .authenticated
         } catch {

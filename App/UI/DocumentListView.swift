@@ -5,6 +5,7 @@
 //  Created by Alex Young on 4/15/26.
 //
 
+import Foundation
 import GRDBQuery
 import PDFKit
 import SwiftUI
@@ -12,47 +13,22 @@ import SwiftUI
 struct DocumentListView: View {
     
     @State private var isSharing = false
-    @EnvironmentStateObject var model: DocumentListModel
-    var grouped: [(key: String, value: [Document])] {
-        return Dictionary(grouping: self.model.documents) {
-            String($0.fileName.split(separator: "_").first ?? "")
-        }
-        .sorted { $0.key < $1.key }
-    }
-    @State private var results: [(key: String, value: [TokenSearchResult])] = []
-    
-    init(repo: DocumentRepository) {
-        _model = EnvironmentStateObject { _ in
-            DocumentListModel(repo: repo)
-        }
-    }
+    @StateObject var model: DocumentListModel
     
     var body: some View {
         NavigationStack {
             List {
-                if results.count > 0 {
-                    ForEach(results, id: \.key) {
+                if model.results.count > 0 {
+                    ForEach(model.results, id: \.key) {
                         ResultSection(group: $0)
                     }
                 } else {
-                    ForEach(grouped, id: \.key) {
+                    ForEach(model.grouped, id: \.key) {
                         DocumentSection(group: $0)
                     }
                 }
             }
             .searchable(text: $model.search)
-            .onChange(of: model.search) {
-                Task {
-                    if model.search.count > 0 {
-                        let tokens = try await self.model.repo.search(query: model.search)
-                        self.results = Dictionary(grouping: tokens) { $0.fileName }
-                            .sorted { $0.key < $1.key }
-                    } else {
-                        self.results = []
-                    }
-                }
-                
-            }
             .navigationTitle("Documents")
             .navigationDestination(for: TokenSearchResult.self) { record in
                 let url = self.model.repo.fileUrl(for: record)
@@ -86,9 +62,9 @@ private struct PDFDestination: View {
         case .success(let data):
             PDFSearchView(model: PDFSearchModel(data: data, query: search ?? "")!)
                 .navigationTitle(self.title)
-                #if os(iOS)
+#if os(iOS)
                 .navigationBarTitleDisplayMode(.inline)
-                #endif
+#endif
                 .toolbar {
                     ToolbarItem(placement: .primaryAction) {
                         Button {
@@ -109,7 +85,7 @@ private struct PDFDestination: View {
 
 private struct DocumentSection: View {
     
-    let group: (key: String, value: [Document])
+    let group: (key: String, value: [AnnotatedDocument])
     var title: String {
         if let name = GuideSections[group.key] {
             return [group.key, name].joined(separator: " - ")
@@ -120,8 +96,8 @@ private struct DocumentSection: View {
     var body: some View {
         Section(header: SectionTitle(text: title)) {
             ForEach(group.value, id: \.self) { model in
-                NavigationLink(value: model) {
-                    Text(model.fileName)
+                NavigationLink(value: model.document) {
+                    DocumentItem(document: model)
                 }
             }
         }
@@ -142,10 +118,51 @@ private struct ResultSection: View {
     }
 }
 
+private struct DocumentItem: View {
+    
+    private let formatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "MM/dd/yy"
+        return formatter
+    }()
+    let document: AnnotatedDocument
+    var body: some View {
+        if let metadata = document.metadata {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(alignment: .center) {
+                    if let section = metadata.section {
+                        if let subsection = metadata.subsection {
+                            Text("\(section), \(subsection)")
+                                .font(.caption2)
+                                .foregroundStyle(Color(.systemGray))
+                        } else {
+                            Text(section)
+                                .font(.caption2)
+                                .foregroundStyle(Color(.systemGray))
+                        }
+                    }
+                    Spacer()
+                    if let date = metadata.date {
+                        Text(formatter.string(from: date))
+                            .font(.caption2)
+                            .foregroundStyle(Color(.systemGray))
+                    }
+                }
+                if let title = metadata.title {
+                    Text(title.titlecased())
+                }
+            }
+        } else {
+            Text(document.document.fileName)
+        }
+    }
+}
+
 private struct SectionTitle: View {
     
     let text: String
     var body: some View {
-        Text(text).font(.headline).fontWeight(.semibold)
+        Text(text).font(.headline)
     }
 }
