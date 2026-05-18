@@ -41,5 +41,19 @@ func createMigrator() -> DatabaseMigrator {
             t.tokenizer = FTS5TokenizerDescriptor(components: ["unicode61", "remove_diacritics", "2"])
         }
     }
+    migrator.registerMigration("createDocumentMetadata") { db in
+        try db.create(table: "documentMetadata") { t in
+            t.column("id", .text)
+                .primaryKey()
+            t.column("createdAt", .datetime)
+                .notNull()
+            t.column("documentId", .text).notNull().indexed()
+                .references("document", column: "id", onDelete: .cascade)
+            t.column("section", .text)
+            t.column("subsection", .text)
+            t.column("date", .datetime)
+            t.column("title", .text)
+        }
+    }
     return migrator
 }
