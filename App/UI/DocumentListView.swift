@@ -70,9 +70,9 @@ private struct PDFDestination: View {
         case .success(let data):
             PDFSearchView(model: PDFSearchModel(data: data, query: search ?? "")!)
                 .navigationTitle(self.title)
-#if os(iOS)
+                #if os(iOS)
                 .navigationBarTitleDisplayMode(.inline)
-#endif
+                #endif
                 .toolbar {
                     ToolbarItem(placement: .primaryAction) {
                         Button {
@@ -103,7 +103,9 @@ private struct DocumentSection: View {
             }
         }
         .navigationTitle(GuideSections[group.section] ?? group.section)
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
     }
 }
 
