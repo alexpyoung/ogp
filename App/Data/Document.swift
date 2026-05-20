@@ -8,7 +8,7 @@
 import Foundation
 import GRDB
 
-struct Document: Codable, Identifiable, Hashable, FetchableRecord, PersistableRecord, FileReference {
+struct Document: Codable, Identifiable, Hashable, FetchableRecord, PersistableRecord {
     
     let id: String
     let remotePath: String

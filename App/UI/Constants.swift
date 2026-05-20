@@ -5,7 +5,7 @@
 //  Created by Alex Young on 4/20/26.
 //
 
-let GuideSections = [
+let SectionNames = [
     "101": "General Regulations",
     "102": "Reports and Reporting Procedures",
     "103": "Disciplinary Action",
@@ -40,6 +40,7 @@ let acronyms = [
     "DOH",
     "DNR",
     "EEO",
+    "EMD",
     "EMS",
     "EMT",
     "ePCR",

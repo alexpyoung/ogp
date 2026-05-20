@@ -15,6 +15,12 @@ struct DocumentGroup: Hashable {
     let documents: [AnnotatedDocument]
 }
 
+struct DocumentSearchResult: Hashable {
+    
+    let fileName: String
+    let tokens: [TokenSearchResult]
+}
+
 @MainActor
 final class DocumentListModel: ObservableObject {
     
@@ -22,13 +28,13 @@ final class DocumentListModel: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     @Published private(set) var documents: [AnnotatedDocument] = []
     @Published var search: String = ""
-    @Published var results: [(key: String, value: [TokenSearchResult])] = []
+    @Published var results: [DocumentSearchResult] = []
     let repo: DocumentRepository
     var grouped: [DocumentGroup] {
         return Dictionary(grouping: self.documents) {
             String($0.document.fileName.split(separator: "_").first ?? "")
         }
-        .map { DocumentGroup(section: $0.key, documents: $0.value)}
+        .map { DocumentGroup(section: $0.key, documents: $0.value) }
         .sorted { $0.section < $1.section }
     }
     
@@ -52,8 +58,9 @@ final class DocumentListModel: ObservableObject {
             self.results = []
         } else {
             let tokens = try await self.repo.search(query: search)
-            self.results = Dictionary(grouping: tokens) { $0.fileName }
-                .sorted { $0.key < $1.key }
+            self.results = Dictionary(grouping: tokens) { $0.document.fileName }
+                .map { DocumentSearchResult(fileName: $0.key, tokens: $0.value) }
+                .sorted { $0.fileName < $1.fileName }
         }
     }
 }

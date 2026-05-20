@@ -9,11 +9,6 @@ import Foundation
 import SwiftData
 import GRDB
 
-protocol FileReference {
-    
-    var fileName: String { get }
-}
-
 struct DocumentRepository {
    
     private let database: DatabaseManager
@@ -106,13 +101,14 @@ struct DocumentRepository {
         try await self.database.read {
             try TokenSearchResult.fetchAll($0, sql: """
                 SELECT
-                    t.id AS tokenId,
-                    t.text AS text,
-                    d.fileName AS documentFileName,
+                    t.*,
+                    d.*,
+                    m.*,
                     bm25(documentTokenFTS) AS score
                 FROM documentTokenFTS f
                 JOIN documentToken t ON t.id = f.tokenId
                 JOIN document d ON d.id = t.documentId
+                LEFT JOIN documentMetadata m ON m.documentId = d.id
                 WHERE documentTokenFTS MATCH ?
                 ORDER BY score
             """, arguments: [query])
@@ -137,9 +133,9 @@ struct DocumentRepository {
         }
     }
     
-    func fileUrl(for reference: any FileReference) -> URL {
+    func fileUrl(for document: Document) -> URL {
         return self.baseUrl
-            .appendingPathComponent(reference.fileName)
+            .appendingPathComponent(document.fileName)
             .standardizedFileURL
     }
 }

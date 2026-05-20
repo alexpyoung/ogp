@@ -19,15 +19,15 @@ struct DocumentListView: View {
         NavigationStack {
             List {
                 if model.results.count > 0 {
-                    ForEach(model.results, id: \.key) {
-                        ResultSection(group: $0)
+                    ForEach(model.results, id: \.fileName) {
+                        ResultSection(result: $0)
                     }
                 } else {
                     ForEach(model.grouped, id: \.section) { group in
                         NavigationLink(value: group) {
                             Text([
                                 group.section,
-                                GuideSections[group.section]
+                                SectionNames[group.section]
                             ].compactMap { $0 }.joined(separator: ". "))
                         }
                     }
@@ -39,9 +39,9 @@ struct DocumentListView: View {
                 DocumentSection(group: group)
             }
             .navigationDestination(for: TokenSearchResult.self) { record in
-                let url = self.model.repo.fileUrl(for: record)
+                let url = self.model.repo.fileUrl(for: record.document)
                 PDFDestination(
-                    title: record.fileName,
+                    title: record.document.fileName,
                     url: url,
                     search: model.search,
                     isSharing: $isSharing
@@ -102,7 +102,7 @@ private struct DocumentSection: View {
                 }
             }
         }
-        .navigationTitle(GuideSections[group.section] ?? group.section)
+        .navigationTitle(SectionNames[group.section] ?? group.section)
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
@@ -111,12 +111,12 @@ private struct DocumentSection: View {
 
 private struct ResultSection: View {
     
-    let group: (key: String, value: [TokenSearchResult])
+    let result: DocumentSearchResult
     var body: some View {
-        Section(header: Text(group.key)) {
-            ForEach(group.value, id: \.self) { model in
+        Section(header: Text(result.tokens.first?.metadata?.title ?? result.fileName)) {
+            ForEach(result.tokens, id: \.self) { model in
                 NavigationLink(value: model) {
-                    Text(model.text)
+                    Text(model.token.text)
                 }
             }
         }

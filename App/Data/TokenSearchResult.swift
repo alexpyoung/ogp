@@ -8,17 +8,19 @@
 import Foundation
 import GRDB
 
-struct TokenSearchResult: FetchableRecord, Hashable, FileReference {
+struct TokenSearchResult: FetchableRecord, Hashable {
 
-    let tokenId: String
-    let text: String
-    let fileName: String
+    let token: DocumentToken
+    let document: Document
+    let metadata: DocumentMetadata?
     let score: Double
 
     init(row: Row) throws {
-        tokenId = row["tokenId"]
-        text = row["text"]
-        fileName = row["documentFileName"]
+        token = try DocumentToken(row: row)
+        document = try Document(row: row)
+        metadata = row.hasColumn("documentId")
+            ? try? DocumentMetadata(row: row)
+            : nil
         score = row["score"]
     }
 }
