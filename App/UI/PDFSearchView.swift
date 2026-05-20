@@ -113,9 +113,11 @@ private struct SearchBar: View {
                         .foregroundStyle(.gray)
                 }
                 TextField("", text: $text)
+                    #if os(iOS)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
                     .foregroundStyle(.primary)
+                    #endif
             }
             if text.count > 0 {
                 Button {
