@@ -69,7 +69,7 @@ extension PDFDocumentView: UIViewRepresentable {
     }
 }
 #elseif os(macOS)
-extension PDFKitView: NSViewRepresentable {
+extension PDFDocumentView: NSViewRepresentable {
     
     func makeNSView(context: Context) -> PDFView {
         let view = PDFView()
