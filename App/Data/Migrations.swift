@@ -39,7 +39,7 @@ func createMigrator() -> DatabaseMigrator {
         try db.create(virtualTable: "documentTokenFTS", using: FTS5()) { t in
             t.column("text")
             t.column("tokenId")
-            t.tokenizer = FTS5TokenizerDescriptor(components: ["unicode61", "remove_diacritics", "2"])
+            t.tokenizer = FTS5TokenizerDescriptor(components: ["trigram", "remove_diacritics", "2"])
         }
     }
     migrator.registerMigration("createDocumentMetadata") { db in
