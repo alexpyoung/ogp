@@ -1,5 +1,5 @@
 //
-//  ViewModel.swift
+//  RootViewModel.swift
 //  ogp
 //
 //  Created by Alex Young on 4/14/26.
@@ -22,7 +22,7 @@ enum AppState {
 }
 
 @MainActor
-final class ViewModel: ObservableObject {
+final class RootViewModel: ObservableObject {
     
     @Published private(set) var state: AppState = .uninitialized
     let repo: DocumentRepository

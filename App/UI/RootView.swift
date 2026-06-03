@@ -10,7 +10,7 @@ import SwiftUI
 
 struct RootView: View {
     
-    @StateObject var model: ViewModel
+    @StateObject var model: RootViewModel
     @State private var isAuthenticating = false
     @State private var error: Error?
     private var authenticationText: String {

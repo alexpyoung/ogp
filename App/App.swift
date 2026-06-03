@@ -24,6 +24,6 @@ struct ogpApp: App {
 private struct ApplicationView: View {
     
     var body: some View {
-        RootView(model: ViewModel(repo: try! DocumentRepository()))
+        RootView(model: RootViewModel(repo: try! DocumentRepository()))
     }
 }
