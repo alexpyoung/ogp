@@ -11,26 +11,21 @@ import PDFKit
 final class PDFSearchModel: ObservableObject {
     
     let document: PDFDocument
-    @Published var rawQuery: String
-    @Published private(set) var debouncedQuery: String
+    @Published var query: String
     @Published var selection: PDFSelection? = nil
     @Published private(set) var matches: [PDFSelection] = []
-    @Published private(set) var currentIndex: Int = 0 {
+    @Published private var currentIndex: Int = 0 {
         didSet {
-            if matches.indices.contains(currentIndex) {
-                selection = matches[currentIndex]
-            } else {
-                selection = nil
-            }
+            selection = matches.indices.contains(currentIndex)
+                ? matches[currentIndex]
+                : nil
         }
     }
     private var cancellables = Set<AnyCancellable>()
     var resultsLabel: String {
-        if matches.count > 0 {
-            return "\(currentIndex + 1)/\(matches.count)"
-        } else {
-            return "0/0"
-        }
+        return matches.count > 0
+            ? "\(currentIndex + 1)/\(matches.count)"
+            : "0/0"
     }
     private let token: TokenSearchResult?
     
@@ -38,14 +33,11 @@ final class PDFSearchModel: ObservableObject {
         guard let document = PDFDocument(data: data) else {
             return nil
         }
-        self.rawQuery = search?.query ?? ""
-        self.debouncedQuery = search?.query ?? ""
+        self.query = search?.query ?? ""
         self.document = document
         self.token = search?.result
-        self.$rawQuery
+        self.$query
             .debounce(for: .milliseconds(300), scheduler: DispatchQueue.main)
-            .assign(to: &$debouncedQuery)
-        self.$debouncedQuery
             .sink { [weak self] in self?.match(query: $0) }
             .store(in: &cancellables)
     }
@@ -64,10 +56,12 @@ final class PDFSearchModel: ObservableObject {
         matches = document.findString(query, withOptions: .caseInsensitive)
         currentIndex = self.index()
     }
+
     func next() {
         guard !matches.isEmpty else { return }
         currentIndex = (currentIndex + 1) % matches.count
     }
+
     func previous() {
         guard !matches.isEmpty else { return }
         currentIndex = (currentIndex - 1 + matches.count) % matches.count
@@ -77,22 +71,23 @@ final class PDFSearchModel: ObservableObject {
 private extension Array where Element: PDFSelection {
     
     func index(nearest to: CGRect, in page: PDFPage) -> Int? {
-        if let element = self.filter({ $0.pages.contains(page) })
-            .min(by: {
-                $0.bounds(for: page).distance(to: to) < $1.bounds(for: page).distance(to: to)
-            }) {
-                return self.firstIndex(of: element)
-            } else {
-                return nil
-            }
+        if let element = self
+            .filter({ $0.pages.contains(page) })
+            .min(by: { $0.distance(to: to, in: page) < $1.distance(to: to, in: page)})
+        {
+            return self.firstIndex(of: element)
+        } else {
+            return nil
+        }
     }
 }
 
-private extension CGRect {
+private extension PDFSelection {
     
-    func distance(to other: CGRect) -> CGFloat {
-        let dx = self.midX - other.midX
-        let dy = self.midY - other.midY
+    func distance(to b: CGRect, in page: PDFPage) -> CGFloat {
+        let a = self.bounds(for: page)
+        let dx = a.midX - b.midX
+        let dy = a.midY - b.midY
         return sqrt(dx * dx + dy + dy)
     }
 }

@@ -29,8 +29,8 @@ struct PDFSearchView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                SearchBar(text: $model.rawQuery)
-                if model.debouncedQuery.count > 0 { self.iterator }
+                SearchBar(text: $model.query)
+                if model.query.count > 0 { self.iterator }
             }
             .padding(.top, 4)
             .padding(.bottom, 12)
