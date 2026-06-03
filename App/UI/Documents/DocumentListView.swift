@@ -13,7 +13,6 @@ import SwiftUI
 struct DocumentListView: View {
     
     @StateObject var model: DocumentListModel
-    
     var body: some View {
         NavigationStack {
             List {
