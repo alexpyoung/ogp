@@ -20,7 +20,13 @@ final class HTMLLoader: NSObject {
     private var continuation: CheckedContinuation<String, Error>?
     
     init(cookies: HTTPCookieStorage) async {
-        self.view = await WKWebView(cookies: cookies)
+        let dataStore = WKWebsiteDataStore.default()
+        for cookie in cookies.cookies ?? [] {
+            await dataStore.httpCookieStore.setCookie(cookie)
+        }
+        let config = WKWebViewConfiguration()
+        config.websiteDataStore = dataStore
+        self.view = WKWebView(frame: .zero, configuration: config)
         super.init()
         self.view.navigationDelegate = self
     }
@@ -69,18 +75,5 @@ extension HTMLLoader: WKNavigationDelegate {
     func webView(_: WKWebView, didFailProvisionalNavigation _: WKNavigation, withError error: Error) {
         self.continuation?.resume(throwing: error)
         self.continuation = nil
-    }
-}
-
-private extension WKWebView {
-    
-    convenience init(cookies: HTTPCookieStorage) async {
-        let dataStore = WKWebsiteDataStore.default()
-        for cookie in cookies.cookies ?? [] {
-            await dataStore.httpCookieStore.setCookie(cookie)
-        }
-        let config = WKWebViewConfiguration()
-        config.websiteDataStore = dataStore
-        self.init(frame: .zero, configuration: config)
     }
 }
