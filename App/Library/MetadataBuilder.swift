@@ -1,5 +1,5 @@
 //
-//  MetadataGenerator.swift
+//  MetadataBuilder.swift
 //  ogp
 //
 //  Created by Alex Young on 5/14/26.
@@ -7,15 +7,19 @@
 
 import Foundation
 
-struct MetadataGenerator {
+struct MetadataBuilder {
     
-    private static let formatter: DateFormatter = {
+    static let shared: Self = MetadataBuilder()
+    
+    private init() {}
+    
+    private let formatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
         return formatter
     }()
     
-    private static func date(from string: String) -> Date? {
+    private func date(from string: String) -> Date? {
         let formats = [
             "MMMM d, yyyy",
             "'DATE:' MMMM d, yyyy"
@@ -26,11 +30,11 @@ struct MetadataGenerator {
         }.first
     }
     
-    static func title(from tokens: [String]) -> String? {
+    private func title(from tokens: [String]) -> String? {
         tokens.isEmpty ? nil : tokens.joined(separator: " ")
     }
     
-    static func generate(id: String, tokens: [DocumentToken]) -> DocumentMetadata? {
+    func build(id: String, tokens: [DocumentToken]) -> DocumentMetadata? {
         var section: String?
         var subsection: String?
         var date: Date?
