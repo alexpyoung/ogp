@@ -19,6 +19,9 @@ struct DocumentSearchResult: Hashable {
     
     let fileName: String
     let tokens: [TokenSearchResult]
+    var title: String {
+        return self.tokens.first?.metadata?.title ?? self.fileName
+    }
 }
 
 @MainActor

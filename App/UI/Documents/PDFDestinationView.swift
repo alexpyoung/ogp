@@ -12,7 +12,7 @@ struct PDFDestinationView: View {
     let title: String
     let url: URL
     var search: (query: String, result: TokenSearchResult)? = nil
-    @Binding var isSharing: Bool
+    @State private var isSharing: Bool = false
     var body: some View {
         switch self.url.data() {
         case .success(let data):
