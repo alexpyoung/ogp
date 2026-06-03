@@ -40,7 +40,7 @@ struct DocumentListView: View {
             }
             .navigationDestination(for: TokenSearchResult.self) { record in
                 let url = self.model.repo.fileUrl(for: record.document)
-                PDFDestination(
+                PDFDestinationView(
                     title: record.document.fileName,
                     url: url,
                     search: (model.search, record),
@@ -49,47 +49,12 @@ struct DocumentListView: View {
             }
             .navigationDestination(for: Document.self) { record in
                 let url = self.model.repo.fileUrl(for: record)
-                PDFDestination(
+                PDFDestinationView(
                     title: record.fileName,
                     url: url,
                     isSharing: $isSharing
                 )
             }
-        }
-    }
-}
-
-private struct PDFDestination: View {
-    
-    let title: String
-    let url: URL
-    var search: (query: String, result: TokenSearchResult)? = nil
-    @Binding var isSharing: Bool
-    var body: some View {
-        switch self.url.data() {
-        case .success(let data):
-            PDFSearchView(model: PDFSearchModel(
-                data: data,
-                search: search
-            )!)
-                .navigationTitle(self.title)
-                #if os(iOS)
-                .navigationBarTitleDisplayMode(.inline)
-                #endif
-                .toolbar {
-                    ToolbarItem(placement: .primaryAction) {
-                        Button {
-                            isSharing = true
-                        } label: {
-                            Image(systemName: "square.and.arrow.up")
-                        }
-                    }
-                }
-                .sheet(isPresented: $isSharing) {
-                    ActivityView(items: [self.url])
-                }
-        case .failure(let error):
-            Text(error.localizedDescription)
         }
     }
 }
