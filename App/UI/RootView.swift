@@ -1,5 +1,5 @@
 //
-//  ContentView.swift
+//  RootView.swift
 //  ogp
 //
 //  Created by Alex Young on 4/14/26.
@@ -8,7 +8,7 @@
 import SwiftData
 import SwiftUI
 
-struct ContentView: View {
+struct RootView: View {
     
     @StateObject var model: ViewModel
     @State private var isAuthenticating = false
