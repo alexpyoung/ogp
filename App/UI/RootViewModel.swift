@@ -6,10 +6,8 @@
 //
 
 import Combine
-import GRDB
 import SwiftData
 import SwiftUI
-import WebKit
 
 enum AppState {
     case uninitialized
@@ -36,7 +34,6 @@ final class RootViewModel: ObservableObject {
         }
     }
     private let tokenizer: PDFTokenizer
-    private var cancellables = Set<AnyCancellable>()
     
     init(database: DatabaseManager = .shared, repo: DocumentRepository) {
         self.database = database
@@ -61,11 +58,14 @@ final class RootViewModel: ObservableObject {
             let loader = await HTMLLoader(cookies: HTTPCookieStorage.shared)
             let crawler = WebCrawler(base: base, exclusions: exclusions, loader: loader)
             crawler.$progress
-                .sink { self.state = .crawling($0) }
-                .store(in: &cancellables)
-            let results = try await crawler.start(url: start)
-            let existing = Set(try await self.repo.documents().map { $0.remotePath })
-            let targets = results.subtracting(existing).compactMap { URL(string: $0, relativeTo: self.baseURL)}
+                .map { AppState.crawling($0) }
+                .assign(to: &self.$state)
+            let (results, existing) = await (
+                try crawler.start(url: start),
+                try self.repo.documents().map { $0.remotePath }
+            )
+            let targets = results.subtracting(Set(existing))
+                .compactMap { URL(string: $0, relativeTo: self.baseURL)}
             try await self.download(pdfs: targets)
         } catch {
             self.state = .error(error)
