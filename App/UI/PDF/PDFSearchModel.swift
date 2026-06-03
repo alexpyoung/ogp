@@ -42,19 +42,20 @@ final class PDFSearchModel: ObservableObject {
             .store(in: &cancellables)
     }
     
-    private func index() -> Int {
-        if let bounds = token?.token.bounds,
-           let index = token?.token.pageIndex,
-           let page = self.document.page(at: index) {
-            return self.matches.index(nearest: bounds, in: page) ?? 0
-        } else {
-            return 0
-        }
+    private func findNearestBoundsIndex() -> Int? {
+        guard let bounds = token?.token.bounds,
+              let pageIndex = token?.token.pageIndex,
+              let page = self.document.page(at: pageIndex)
+        else { return nil }
+        return self.matches
+            .filter({ $0.pages.contains(page) })
+            .map({ $0.bounds(for: page) })
+            .index(nearest: bounds)
     }
     
     private func match(query: String) {
         matches = document.findString(query, withOptions: .caseInsensitive)
-        currentIndex = self.index()
+        currentIndex = self.findNearestBoundsIndex() ?? 0
     }
 
     func next() {
@@ -65,29 +66,5 @@ final class PDFSearchModel: ObservableObject {
     func previous() {
         guard !matches.isEmpty else { return }
         currentIndex = (currentIndex - 1 + matches.count) % matches.count
-    }
-}
-
-private extension Array where Element: PDFSelection {
-    
-    func index(nearest to: CGRect, in page: PDFPage) -> Int? {
-        if let element = self
-            .filter({ $0.pages.contains(page) })
-            .min(by: { $0.distance(to: to, in: page) < $1.distance(to: to, in: page)})
-        {
-            return self.firstIndex(of: element)
-        } else {
-            return nil
-        }
-    }
-}
-
-private extension PDFSelection {
-    
-    func distance(to b: CGRect, in page: PDFPage) -> CGFloat {
-        let a = self.bounds(for: page)
-        let dx = a.midX - b.midX
-        let dy = a.midY - b.midY
-        return sqrt(dx * dx + dy + dy)
     }
 }
