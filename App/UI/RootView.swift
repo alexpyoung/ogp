@@ -15,23 +15,6 @@ struct RootView: View {
     @State private var error: Error?
     
     private let scrim: some View = Color.black.opacity(0.2).ignoresSafeArea()
-    private var settings: some View {
-        NavigationStack {
-            List {
-                Button("Sync New PDFs") {
-                    Task { await self.model.crawl() }
-                }
-                Button("Refresh PDFs") {
-                    Task { await self.model.sync() }
-                }
-                Button("Index PDFs") {
-                    Task { await self.model.index() }
-                }
-                AuthenticationButton(state: model.state, toggle: $isAuthenticating)
-            }
-            .navigationTitle("Settings")
-        }
-    }
     var body: some View {
         ZStack {
             AuthenticationView(url: self.model.baseURL) {
@@ -48,9 +31,10 @@ struct RootView: View {
                     .tabItem {
                         Label("Documents", systemImage: "tray.full")
                     }
-                self.settings.tabItem {
-                    Label("Settings", systemImage: "gear")
-                }
+                SettingsView(model: model, isAuthenticating: $isAuthenticating)
+                    .tabItem {
+                        Label("Settings", systemImage: "gear")
+                    }
             }
             switch model.state {
             case .uninitialized:
@@ -127,6 +111,29 @@ private struct AuthenticationButton: View {
     }
     var body: some View {
         Button(text) { toggle = true }
+    }
+}
+
+private struct SettingsView: View {
+    
+    @ObservedObject var model: RootViewModel
+    @Binding var isAuthenticating: Bool
+    var body: some View {
+        NavigationStack {
+            List {
+                Button("Sync New PDFs") {
+                    Task { await model.crawl() }
+                }
+                Button("Refresh PDFs") {
+                    Task { await model.sync() }
+                }
+                Button("Index PDFs") {
+                    Task { await model.index() }
+                }
+                AuthenticationButton(state: model.state, toggle: $isAuthenticating)
+            }
+            .navigationTitle("Settings")
+        }
     }
 }
 
