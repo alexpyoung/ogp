@@ -16,14 +16,7 @@ struct ogpApp: App {
     
     var body: some Scene {
         WindowGroup {
-            ApplicationView()
+            RootView()
         }
-    }
-}
-
-private struct ApplicationView: View {
-    
-    var body: some View {
-        RootView(model: RootViewModel(repo: try! DocumentRepository()))
     }
 }

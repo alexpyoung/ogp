@@ -10,7 +10,7 @@ import SwiftUI
 
 struct RootView: View {
     
-    @StateObject var model: RootViewModel
+    @StateObject var model = RootViewModel(repo: try! DocumentRepository())
     @State private var isAuthenticating = false
     @State private var error: Error?
     private var authenticationText: String {
