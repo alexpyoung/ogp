@@ -42,6 +42,13 @@ struct PDFSearchView: View {
             )
         }
     }
+    
+    init?(data: Data, search: (query: String, result: TokenSearchResult)? = nil) {
+        guard let model = PDFSearchModel(data: data, search: search) else {
+            return nil
+        }
+        _model = StateObject(wrappedValue: model)
+    }
 }
 
 private struct SearchBar: View {

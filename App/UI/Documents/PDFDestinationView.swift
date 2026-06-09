@@ -16,10 +16,7 @@ struct PDFDestinationView: View {
     var body: some View {
         switch self.url.data() {
         case .success(let data):
-            PDFSearchView(model: PDFSearchModel(
-                data: data,
-                search: search
-            )!)
+            PDFSearchView(data: data, search: search)
             .navigationTitle(self.title)
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
