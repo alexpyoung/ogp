@@ -13,13 +13,6 @@ struct RootView: View {
     @StateObject var model = RootViewModel(repo: try! DocumentRepository())
     @State private var isAuthenticating = false
     @State private var error: Error?
-    private var authenticationText: String {
-        if case .unauthenticated = self.model.state {
-            "Login"
-        } else {
-            "Logout"
-        }
-    }
     
     private let scrim: some View = Color.black.opacity(0.2).ignoresSafeArea()
     private var settings: some View {
@@ -34,9 +27,7 @@ struct RootView: View {
                 Button("Index PDFs") {
                     Task { await self.model.index() }
                 }
-                Button(authenticationText) {
-                    self.isAuthenticating = true
-                }
+                AuthenticationButton(state: model.state, toggle: $isAuthenticating)
             }
             .navigationTitle("Settings")
         }
@@ -120,6 +111,22 @@ struct RootView: View {
             .frame(minWidth: 400, minHeight: 700)
             #endif
         }
+    }
+}
+
+private struct AuthenticationButton: View {
+    
+    let state: AppState
+    @Binding var toggle: Bool
+    private var text: String {
+        if case .unauthenticated = self.state {
+            "Login"
+        } else {
+            "Logout"
+        }
+    }
+    var body: some View {
+        Button(text) { toggle = true }
     }
 }
 
