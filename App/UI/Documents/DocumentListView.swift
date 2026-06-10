@@ -38,6 +38,12 @@ struct DocumentListView: View {
             }
         }
     }
+    
+    init(repo: DocumentRepository) {
+        _model = StateObject(
+            wrappedValue: DocumentListModel(repo: repo)
+        )
+    }
 }
 
 private struct ResultView: View {
