@@ -66,7 +66,7 @@ final class RootViewModel: ObservableObject {
             )
             let targets = results.subtracting(Set(existing))
                 .compactMap { URL(string: $0, relativeTo: self.baseURL)}
-            try await self.download(pdfs: targets)
+            try await self.download(urls: targets)
         } catch {
             self.state = .error(error)
         }
@@ -74,8 +74,9 @@ final class RootViewModel: ObservableObject {
     
     func sync() async {
         do {
-            let urls = try await self.repo.documents().compactMap { URL(string: $0.remotePath, relativeTo: self.baseURL) }
-            try await self.download(pdfs: urls)
+            let urls = try await self.repo.documents()
+                .compactMap { URL(string: $0.remotePath, relativeTo: self.baseURL) }
+            try await self.download(urls: urls)
         } catch {
             self.state = .error(error)
         }
@@ -107,12 +108,13 @@ final class RootViewModel: ObservableObject {
         }
     }
     
-    private func download(pdfs: [URL]) async throws {
+    private func download(urls: [URL]) async throws {
         let session = URLSession(cookies: HTTPCookieStorage.shared)
-        for (index, url) in pdfs.enumerated() {
+        let total = Float(urls.count)
+        for (index, url) in urls.enumerated() {
             let (data, _) = try await session.data(from: url)
             _ = try await self.repo.save(data: data, from: url.path)
-            self.state = .downloading(Float(index + 1) / Float(pdfs.count))
+            self.state = .downloading(Float(index + 1) / total)
         }
         self.state = .authenticated
     }
