@@ -47,27 +47,13 @@ struct RootView: View {
                 Button("Login") { isAuthenticating = true }
             case .indexing(let progress):
                 scrim
-                VStack(alignment: .center, spacing: 16) {
-                    Text("Indexing PDFs")
-                    ProgressView(value: progress)
-                        .progressViewStyle(LinearProgressViewStyle())
-                    
-                }.modifier(ListCardStyle())
+                ProgressCard(label: "Indexing PDFs", value: progress)
             case .crawling(let progress):
                 scrim
-                VStack(alignment: .center, spacing: 16) {
-                    Text("Finding PDFs")
-                    ProgressView(value: progress)
-                        .progressViewStyle(LinearProgressViewStyle())
-                    
-                }.modifier(ListCardStyle())
+                ProgressCard(label: "Finding PDFs", value: progress)
             case .downloading(let progress):
                 scrim
-                VStack(alignment: .center, spacing: 16) {
-                    Text("Downloading PDFs")
-                    ProgressView(value: progress)
-                        .progressViewStyle(LinearProgressViewStyle())
-                }.modifier(ListCardStyle())
+                ProgressCard(label: "Downloading PDFs", value: progress)
             case .authenticated: EmptyView()
             case .error(let error):
                 Spacer()
@@ -111,6 +97,19 @@ private struct AuthenticationButton: View {
     }
     var body: some View {
         Button(text) { toggle = true }
+    }
+}
+
+private struct ProgressCard: View {
+    
+    let label: String
+    let value: Float
+    var body: some View {
+        VStack(alignment: .center, spacing: 16) {
+            Text(label)
+            ProgressView(value: value)
+                .progressViewStyle(LinearProgressViewStyle())
+        }.modifier(ListCardStyle())
     }
 }
 
