@@ -10,27 +10,13 @@ import SwiftUI
 struct PDFSearchView: View {
     
     @StateObject var model: PDFSearchModel
-    private var iterator: some View {
-        Group {
-            if model.matches.count > 0 {
-                Button { model.previous() } label: {
-                    Image(systemName: "chevron.up")
-                }
-                Button { model.next() } label: {
-                    Image(systemName: "chevron.down")
-                }
-            }
-            Text(model.resultsLabel)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .frame(minWidth: 32)
-        }
-    }
     var body: some View {
         VStack(spacing: 0) {
             HStack {
                 SearchBar(text: $model.query)
-                if model.query.count > 0 { self.iterator }
+                if model.query.count > 0 {
+                    SearchIterator(model: model)
+                }
             }
             .padding(.top, 4)
             .padding(.bottom, 12)
@@ -88,3 +74,26 @@ private struct SearchBar: View {
         }
     }
 }
+
+
+private struct SearchIterator: View {
+    
+    @ObservedObject var model: PDFSearchModel
+    var body: some View {
+        Group {
+            if model.matches.count > 0 {
+                Button { model.previous() } label: {
+                    Image(systemName: "chevron.up")
+                }
+                Button { model.next() } label: {
+                    Image(systemName: "chevron.down")
+                }
+            }
+            Text(model.resultsLabel)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .frame(minWidth: 32)
+        }
+    }
+}
+
