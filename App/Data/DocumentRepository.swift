@@ -10,7 +10,8 @@ import SwiftData
 import GRDB
 
 struct DocumentRepository {
-   
+
+    static let shared: Self = try! DocumentRepository()
     private let database: DatabaseManager
     private let baseUrl: URL
     var hasFiles: Bool {
@@ -20,8 +21,8 @@ struct DocumentRepository {
         ) else { return false }
         return contents.count > 0
     }
-    
-    init(database: DatabaseManager = .shared) throws {
+
+    private init(database: DatabaseManager = .shared) throws {
         guard let support = FileManager.default.urls(
             for: .applicationSupportDirectory,
             in: .userDomainMask

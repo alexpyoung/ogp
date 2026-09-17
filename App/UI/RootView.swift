@@ -11,8 +11,8 @@ import SwiftUI
 struct RootView: View {
     
     @EnvironmentObject var authentication: AuthenticationService
-    @ObservedObject var model: RootViewModel
-    
+    @StateObject var model: RootViewModel
+
     private let scrim: some View = Color.black.opacity(0.2).ignoresSafeArea()
     private var content: some View {
         TabView {
@@ -27,6 +27,11 @@ struct RootView: View {
                 }
         }
     }
+
+    init(auth: AuthenticationService) {
+        _model = StateObject(wrappedValue: RootViewModel(auth: auth))
+    }
+
     var body: some View {
         ZStack {
             AuthenticationView()

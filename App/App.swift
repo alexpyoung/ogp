@@ -18,10 +18,8 @@ struct ogpApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootView(model: RootViewModel(
-                auth: authentication,
-                repo: try! DocumentRepository()
-            )).environmentObject(authentication)
+            RootView(auth: authentication)
+                .environmentObject(authentication)
         }
     }
 }

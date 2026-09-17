@@ -10,9 +10,9 @@ import GRDB
 
 struct DatabaseManager {
     
+    static let shared: Self = try! DatabaseManager()
     private var migrator: DatabaseMigrator = createMigrator()
     private(set) var queue: DatabaseQueue
-    static let shared: Self = try! DatabaseManager()
     
     private init() throws {
         guard let parent = FileManager.default.urls(

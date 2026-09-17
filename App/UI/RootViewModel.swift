@@ -28,7 +28,10 @@ final class RootViewModel: ObservableObject {
     let baseURL = URL(string: "https://lmsdocs.fdnycloud.org/")
     private let tokenizer: PDFTokenizer
     
-    init(database: DatabaseManager = .shared, auth: AuthenticationService, repo: DocumentRepository) {
+    init(database: DatabaseManager = .shared,
+         repo: DocumentRepository = .shared,
+         auth: AuthenticationService
+    ) {
         self.database = database
         self.auth = auth
         self.repo = repo
