@@ -12,7 +12,7 @@ extension CGRect {
     func distance(to b: CGRect) -> CGFloat {
         let dx = self.midX - b.midX
         let dy = self.midY - b.midY
-        return sqrt(dx * dx + dy + dy)
+        return sqrt(dx * dx + dy * dy)
     }
 }
 
