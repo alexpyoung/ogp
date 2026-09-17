@@ -10,52 +10,49 @@ import SwiftUI
 
 struct RootView: View {
     
-    @StateObject var model = RootViewModel(repo: try! DocumentRepository())
-    @State private var isAuthenticating = false
-    @State private var error: Error?
+    @EnvironmentObject var authentication: AuthenticationService
+    @ObservedObject var model: RootViewModel
     
     private let scrim: some View = Color.black.opacity(0.2).ignoresSafeArea()
+    private var content: some View {
+        TabView {
+            DocumentListView(repo: self.model.repo)
+                .tabItem {
+                    Label("Documents", systemImage: "tray.full")
+                }
+            SettingsView(model: model)
+                .environmentObject(authentication)
+                .tabItem {
+                    Label("Settings", systemImage: "gear")
+                }
+        }
+    }
     var body: some View {
         ZStack {
-            AuthenticationView(url: self.model.baseURL) {
-                switch $0 {
-                case .authenticated(let cookies):
-                    await self.model.didAuthenticate(using: cookies)
-                case .unauthenticated:
-                    self.isAuthenticating = true
-                }
-            }
-            .frame(width: .zero, height: .zero)
-            TabView {
-                DocumentListView(repo: self.model.repo)
-                    .tabItem {
-                        Label("Documents", systemImage: "tray.full")
-                    }
-                SettingsView(model: model, isAuthenticating: $isAuthenticating)
-                    .tabItem {
-                        Label("Settings", systemImage: "gear")
-                    }
-            }
+            AuthenticationView()
+                .environmentObject(authentication)
+                .frame(width: .zero, height: .zero)
             switch model.state {
             case .uninitialized:
-                scrim
                 ProgressView()
                     .progressViewStyle(.circular)
-                    .scaleEffect(1.5)
-            case .unauthenticated:
-                scrim
-                Button("Login") { isAuthenticating = true }
+                    .controlSize(.large)
             case .indexing(let progress):
+                content
                 scrim
                 ProgressCard(label: "Indexing PDFs", value: progress)
             case .crawling(let progress):
+                content
                 scrim
                 ProgressCard(label: "Finding PDFs", value: progress)
             case .downloading(let progress):
+                content
                 scrim
                 ProgressCard(label: "Downloading PDFs", value: progress)
-            case .authenticated: EmptyView()
+            case .idle:
+                content
             case .error(let error):
+                content
                 Spacer()
                     .frame(height: 0)
                     .alert(
@@ -66,37 +63,25 @@ struct RootView: View {
                     )
             }
         }
-        .sheet(isPresented: $isAuthenticating) {
-            AuthenticationView(url: self.model.authenticationURL) {
-                switch $0 {
-                case .unauthenticated: return
-                case .authenticated(let cookies):
-                    self.isAuthenticating = false
-                    await self.model.didAuthenticate(using: cookies)
-                    await self.model.crawl()
-                    await self.model.index()
-                }
+        .sheet(
+            isPresented: $authentication.isPresenting,
+            onDismiss: {},
+            content: {
+                AuthenticationView()
+                    .environmentObject(authentication)
+                    #if os(macOS)
+                    .frame(minWidth: 400, minHeight: 700)
+                    #endif
             }
-            #if os(macOS)
-            .frame(minWidth: 400, minHeight: 700)
-            #endif
-        }
+        )
     }
 }
 
 private struct AuthenticationButton: View {
-    
-    let state: AppState
+
     @Binding var toggle: Bool
-    private var text: String {
-        if case .unauthenticated = self.state {
-            "Login"
-        } else {
-            "Logout"
-        }
-    }
     var body: some View {
-        Button(text) { toggle = true }
+        Button("Refresh Cookies") { toggle = true }
     }
 }
 
@@ -115,8 +100,8 @@ private struct ProgressCard: View {
 
 private struct SettingsView: View {
     
+    @EnvironmentObject var auth: AuthenticationService
     @ObservedObject var model: RootViewModel
-    @Binding var isAuthenticating: Bool
     var body: some View {
         NavigationStack {
             List {
@@ -129,7 +114,12 @@ private struct SettingsView: View {
                 Button("Index PDFs") {
                     Task { await model.index() }
                 }
-                AuthenticationButton(state: model.state, toggle: $isAuthenticating)
+                Button("Refresh Cookies") {
+                    Task { try await auth.authenticate() }
+                }
+                Button("Clear Cookies") {
+                    auth.clearCookies()
+                }
             }
             .navigationTitle("Settings")
         }

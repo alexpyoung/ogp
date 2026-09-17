@@ -11,11 +11,10 @@ import SwiftUI
 
 enum AppState {
     case uninitialized
-    case unauthenticated
+    case idle
     case indexing(Float)
     case crawling(Float)
     case downloading(Float)
-    case authenticated
     case error(Error)
 }
 
@@ -23,29 +22,27 @@ enum AppState {
 final class RootViewModel: ObservableObject {
     
     @Published private(set) var state: AppState = .uninitialized
+    let auth: AuthenticationService
     let repo: DocumentRepository
     private let database: DatabaseManager
     let baseURL = URL(string: "https://lmsdocs.fdnycloud.org/")
-    var authenticationURL: URL? {
-        if case .unauthenticated = self.state {
-            self.baseURL
-        } else {
-            URL(string: "/dcu/web/user/logout", relativeTo: self.baseURL)
-        }
-    }
     private let tokenizer: PDFTokenizer
     
-    init(database: DatabaseManager = .shared, repo: DocumentRepository) {
+    init(database: DatabaseManager = .shared, auth: AuthenticationService, repo: DocumentRepository) {
         self.database = database
+        self.auth = auth
         self.repo = repo
         self.tokenizer = PDFTokenizer(repo: repo)
+        Task {
+            try await auth.authenticate()
+            if self.repo.hasFiles {
+                self.state = .idle
+            } else {
+                await self.crawl()
+            }
+        }
     }
 
-    func didAuthenticate(using cookies: [HTTPCookie]) async {
-        cookies.forEach(HTTPCookieStorage.shared.setCookie)
-        self.state = .authenticated
-    }
-    
     func crawl() async {
         do {
             self.state = .crawling(0)
@@ -55,7 +52,8 @@ final class RootViewModel: ObservableObject {
             let exclusions = [
                 URL(string: "/dcu/web/user/logout")
             ].compactMap { $0 }
-            let loader = await HTMLLoader(cookies: HTTPCookieStorage.shared)
+            try await self.auth.authenticate()
+            let loader = await HTMLLoader(cookies: self.auth.cookies)
             let crawler = WebCrawler(base: base, exclusions: exclusions, loader: loader)
             crawler.$progress
                 .map { AppState.crawling($0) }
@@ -77,6 +75,7 @@ final class RootViewModel: ObservableObject {
             let urls = try await self.repo.documents()
                 .compactMap { URL(string: $0.remotePath, relativeTo: self.baseURL) }
             try await self.download(urls: urls)
+            try await self.auth.authenticate()
         } catch {
             self.state = .error(error)
         }
@@ -94,7 +93,7 @@ final class RootViewModel: ObservableObject {
                 try await self.index(document: document)
                 self.state = .indexing(Float(index) / total)
             }
-            self.state = .authenticated
+            self.state = .idle
         } catch {
             self.state = .error(error)
         }
@@ -109,13 +108,13 @@ final class RootViewModel: ObservableObject {
     }
     
     private func download(urls: [URL]) async throws {
-        let session = URLSession(cookies: HTTPCookieStorage.shared)
+        let session = self.auth.session()
         let total = Float(urls.count)
         for (index, url) in urls.enumerated() {
             let (data, _) = try await session.data(from: url)
             _ = try await self.repo.save(data: data, from: url.path)
             self.state = .downloading(Float(index + 1) / total)
         }
-        self.state = .authenticated
+        self.state = .idle
     }
 }

@@ -19,9 +19,9 @@ final class HTMLLoader: NSObject {
     private let view: WKWebView
     private var continuation: CheckedContinuation<String, Error>?
     
-    init(cookies: HTTPCookieStorage) async {
+    init(cookies: [HTTPCookie]) async {
         let dataStore = WKWebsiteDataStore.default()
-        for cookie in cookies.cookies ?? [] {
+        for cookie in cookies {
             await dataStore.httpCookieStore.setCookie(cookie)
         }
         let config = WKWebViewConfiguration()

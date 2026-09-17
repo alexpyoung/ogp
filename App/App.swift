@@ -10,13 +10,18 @@ import SwiftUI
 @main
 struct ogpApp: App {
     
+    @StateObject var authentication = AuthenticationService()
+
     init() {
         try! DatabaseManager.shared.setup()
     }
-    
+
     var body: some Scene {
         WindowGroup {
-            RootView()
+            RootView(model: RootViewModel(
+                auth: authentication,
+                repo: try! DocumentRepository()
+            )).environmentObject(authentication)
         }
     }
 }

@@ -13,6 +13,13 @@ struct DocumentRepository {
    
     private let database: DatabaseManager
     private let baseUrl: URL
+    var hasFiles: Bool {
+        guard let contents = try? FileManager.default.contentsOfDirectory(
+            at: self.baseUrl,
+            includingPropertiesForKeys: nil
+        ) else { return false }
+        return contents.count > 0
+    }
     
     init(database: DatabaseManager = .shared) throws {
         guard let support = FileManager.default.urls(
