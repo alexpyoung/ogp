@@ -27,8 +27,8 @@ struct DocumentSearchResult: Hashable {
 @MainActor
 final class DocumentListModel: ObservableObject {
     
-    private let queue: DatabaseQueue
     private var cancellables = Set<AnyCancellable>()
+    private var task: Task<Void, Never>?
     @Published private(set) var documents: [AnnotatedDocument] = []
     @Published var search: String = ""
     @Published var results: [DocumentSearchResult] = []
@@ -41,26 +41,29 @@ final class DocumentListModel: ObservableObject {
         .sorted { $0.section < $1.section }
     }
     
-    init(queue: DatabaseQueue = DatabaseManager.shared.queue, repo: DocumentRepository) {
-        self.queue = queue
+    init(repo: DocumentRepository) {
         self.repo = repo
         self.$search
             .debounce(for: .milliseconds(300), scheduler: DispatchQueue.main)
             .removeDuplicates()
-            .sink { search in
-                Task { [weak self] in
-                    try await self?.query(search)
+            .sink { [weak self] search in
+                self?.task?.cancel()
+                self?.task = Task { [weak self] in
+                    try? await self?.query(search)
                 }
             }
             .store(in: &cancellables)
     }
-    
+
     private func query(_ query: String) async throws {
-        if search.isEmpty {
-            self.documents = try await self.repo.annotatedDocuments()
+        if query.isEmpty {
+            let documents = try await self.repo.annotatedDocuments()
+            try Task.checkCancellation()
+            self.documents = documents
             self.results = []
         } else {
-            let tokens = try await self.repo.search(query: search)
+            let tokens = try await self.repo.search(query: query)
+            try Task.checkCancellation()
             self.results = Dictionary(grouping: tokens) { $0.document.fileName }
                 .map { DocumentSearchResult(fileName: $0.key, tokens: $0.value) }
                 .sorted { $0.fileName < $1.fileName }
