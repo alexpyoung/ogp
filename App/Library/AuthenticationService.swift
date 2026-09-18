@@ -18,10 +18,14 @@ final class AuthenticationService: ObservableObject {
         case other(Error)
     }
     
-    @MainActor @Published var isPresenting = false
+    /// Responsible for the presentation of **AuthenticationView**
+    @MainActor @Published var targetURL: URL? = nil
     let baseURL = URL(string: "https://lmsdocs.fdnycloud.org/")
     var loginURL: URL? {
         URL(string: "/dcu/web/user/login", relativeTo: self.baseURL)
+    }
+    var logoutURL: URL? {
+        URL(string: "/dcu/web/user/logout", relativeTo: self.baseURL)
     }
     var cookies: [HTTPCookie] {
         self.storage.cookies ?? []
@@ -49,18 +53,23 @@ final class AuthenticationService: ObservableObject {
         }
         try await withCheckedThrowingContinuation {
             self.continuation = $0
-            self.isPresenting = true
+            self.targetURL = self.loginURL
         }
     }
     
-    func clearCookies() {
+    @MainActor
+    func logout() async throws {
         self.storage.removeCookies(since: .distantPast)
+        try await withCheckedThrowingContinuation {
+            self.continuation = $0
+            self.targetURL = self.logoutURL
+        }
     }
     
     @MainActor
     func didSucceed(cookies: [HTTPCookie]) {
         cookies.forEach(self.storage.setCookie)
-        self.isPresenting = false
+        self.targetURL = nil
         self.continuation?.resume()
         self.continuation = nil
     }
@@ -70,6 +79,7 @@ final class AuthenticationService: ObservableObject {
         if case .redirection = error {
             self.storage.removeCookies(since: .distantPast)
         }
+        self.targetURL = nil
         self.continuation?.resume(throwing: error)
         self.continuation = nil
     }

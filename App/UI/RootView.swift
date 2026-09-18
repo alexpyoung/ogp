@@ -34,9 +34,9 @@ struct RootView: View {
 
     var body: some View {
         ZStack {
-            AuthenticationView()
-                .environmentObject(authentication)
-                .frame(width: .zero, height: .zero)
+//            AuthenticationView()
+//                .environmentObject(authentication)
+//                .frame(width: .zero, height: .zero)
             switch model.state {
             case .uninitialized:
                 ProgressView()
@@ -68,11 +68,10 @@ struct RootView: View {
                     )
             }
         }
-        .sheet(
-            isPresented: $authentication.isPresenting,
+        .sheet(item: $authentication.targetURL,
             onDismiss: {},
-            content: {
-                AuthenticationView()
+            content: { url in
+                AuthenticationView(url: url)
                     .environmentObject(authentication)
                     #if os(macOS)
                     .frame(minWidth: 400, minHeight: 700)
@@ -122,8 +121,8 @@ private struct SettingsView: View {
                 Button("Refresh Cookies") {
                     Task { try await auth.authenticate() }
                 }
-                Button("Clear Cookies") {
-                    auth.clearCookies()
+                Button("Logout") {
+                    Task { try await auth.logout() }
                 }
             }
             .navigationTitle("Settings")
