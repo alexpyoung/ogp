@@ -25,8 +25,10 @@ struct DocumentListView: View {
             .searchable(text: $model.search)
             .navigationTitle("OGP")
             .navigationDestination(for: DocumentGroup.self) { group in
-                DocumentsDestinationView(group: group)
-                    .environmentObject(self.model)
+                DocumentsDestinationView(
+                    repo: self.model.repo,
+                    group: group
+                )
             }
             .navigationDestination(for: TokenSearchResult.self) { record in
                 let url = self.model.repo.fileUrl(for: record.document)

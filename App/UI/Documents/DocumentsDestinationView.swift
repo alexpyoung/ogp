@@ -9,7 +9,7 @@ import SwiftUI
 
 struct DocumentsDestinationView: View {
     
-    @EnvironmentObject var model: DocumentListModel
+    let repo: DocumentRepository
     let group: DocumentGroup
     var body: some View {
         List {
@@ -21,7 +21,7 @@ struct DocumentsDestinationView: View {
         }
         .navigationTitle(SectionNames[group.section] ?? group.section)
         .navigationDestination(for: Document.self) { record in
-            let url = self.model.repo.fileUrl(for: record)
+            let url = self.repo.fileUrl(for: record)
             PDFDestinationView(
                 title: record.fileName,
                 url: url
