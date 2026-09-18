@@ -29,9 +29,13 @@ final class DocumentListModel: ObservableObject {
     
     private var cancellables = Set<AnyCancellable>()
     private var task: Task<Void, Never>?
-    @Published private(set) var documents: [AnnotatedDocument] = []
     @Published var search: String = ""
+
+    // Loosely mutually exclusive lists that are toggled based
+    // on whether the user is searching
+    @Published private(set) var documents: [AnnotatedDocument] = []
     @Published var results: [DocumentSearchResult] = []
+    
     let repo: DocumentRepository
     var grouped: [DocumentGroup] {
         return Dictionary(grouping: self.documents) {
