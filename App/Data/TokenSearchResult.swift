@@ -16,11 +16,9 @@ struct TokenSearchResult: FetchableRecord, Hashable {
     let score: Double
 
     init(row: Row) throws {
-        token = try DocumentToken(row: row)
-        document = try Document(row: row)
-        metadata = row.hasColumn("documentId")
-            ? try? DocumentMetadata(row: row)
-            : nil
+        token = try DocumentToken(row: row.scopes["token"]!)
+        document = try Document(row: row.scopes["document"]!)
+        metadata = try? DocumentMetadata(row: row.scopes["metadata"]!)
         score = row["score"]
     }
 }

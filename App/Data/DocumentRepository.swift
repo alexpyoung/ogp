@@ -107,7 +107,14 @@ struct DocumentRepository {
 
     func search(query: String) async throws -> [TokenSearchResult] {
         try await self.database.read {
-            try TokenSearchResult.fetchAll($0, sql: """
+            // Scope each table's columns into a sub-row for proper decoding
+            let scopes = splittingRowAdapters(columnCounts: [7, 5, 7])
+            let adapter = ScopeAdapter([
+                "token": scopes[0],
+                "document": scopes[1],
+                "metadata": scopes[2],
+            ])
+            return try TokenSearchResult.fetchAll($0, sql: """
                 SELECT
                     t.*,
                     d.*,
@@ -119,7 +126,7 @@ struct DocumentRepository {
                 LEFT JOIN documentMetadata m ON m.documentId = d.id
                 WHERE documentTokenFTS MATCH ?
                 ORDER BY score
-            """, arguments: [query])
+            """, arguments: [query], adapter: adapter)
         }
     }
     
