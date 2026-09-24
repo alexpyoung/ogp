@@ -37,11 +37,15 @@ final class RootViewModel: ObservableObject {
         self.repo = repo
         self.tokenizer = PDFTokenizer(repo: repo)
         Task {
-            try await auth.authenticate()
-            if self.repo.hasFiles {
-                self.state = .idle
-            } else {
-                await self.crawl()
+            do {
+                try await auth.authenticate()
+                if self.repo.hasFiles {
+                    self.state = .idle
+                } else {
+                    await self.crawl()
+                }
+            } catch {
+                self.state = .error(error)
             }
         }
     }

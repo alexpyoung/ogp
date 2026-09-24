@@ -47,7 +47,8 @@ struct AuthenticationView {
                 case "/dcu/web/user/login":
                     break
                 case "/oauth2/v1/authorize":
-                    self.service.didFail(error: .cloudflare)
+//                    self.service.didFail(error: .cloudflare)
+                    break
                 default:
                     return
                 }
